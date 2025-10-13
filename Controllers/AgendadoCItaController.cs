@@ -320,41 +320,35 @@ namespace jhampro.Controllers
             if (servicio == null)
                 return NotFound("Servicio no encontrado o aún no pagado.");
 
-            var comprobantesDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "comprobantes");
-            Directory.CreateDirectory(comprobantesDir);
-
-            var pdfPath = Path.Combine(comprobantesDir, $"Comprobante_{servicio.Id}.pdf");
-
-            if (!System.IO.File.Exists(pdfPath))
+            using (var doc = new PdfDocument())
             {
-                using (var doc = new PdfDocument())
+                var page = doc.AddPage();
+                var gfx = XGraphics.FromPdfPage(page);
+
+                var fontTitle = new XFont("Arial", 18, XFontStyle.Bold);
+                var fontText = new XFont("Arial", 12, XFontStyle.Regular);
+
+                gfx.DrawString("COMPROBANTE DE PAGO", fontTitle, XBrushes.Black,
+                    new XRect(0, 30, page.Width, 40), XStringFormats.TopCenter);
+
+                int y = 100;
+                int spacing = 30;
+
+                gfx.DrawString($"Servicio ID: {servicio.Id}", fontText, XBrushes.Black, 50, y); y += spacing;
+                gfx.DrawString($"Fecha de Pago: {servicio.FechaInicio:yyyy-MM-dd HH:mm}", fontText, XBrushes.Black, 50, y); y += spacing;
+                gfx.DrawString($"Monto: $50.00", fontText, XBrushes.Black, 50, y); y += spacing;
+                gfx.DrawString($"Metodo: PayPal", fontText, XBrushes.Black, 50, y); y += spacing;
+                gfx.DrawString($"Cliente ID: {servicio.ClienteId}", fontText, XBrushes.Black, 50, y);
+
+                using (var stream = new System.IO.MemoryStream())
                 {
-                    var page = doc.AddPage();
-                    var gfx = XGraphics.FromPdfPage(page);
-
-                    var fontTitle = new XFont("Arial", 18, XFontStyle.Bold);
-                    var fontText = new XFont("Arial", 12, XFontStyle.Regular);
-
-                    gfx.DrawString("COMPROBANTE DE PAGO", fontTitle, XBrushes.Black,
-                        new XRect(0, 30, page.Width, 40), XStringFormats.TopCenter);
-
-                    int y = 100;
-                    int spacing = 30;
-
-                    gfx.DrawString($"Servicio ID: {servicio.Id}", fontText, XBrushes.Black, 50, y); y += spacing;
-                    gfx.DrawString($"Fecha de Pago: {servicio.FechaInicio:yyyy-MM-dd HH:mm}", fontText, XBrushes.Black, 50, y); y += spacing;
-                    gfx.DrawString($"Monto: $50.00", fontText, XBrushes.Black, 50, y); y += spacing;
-                    gfx.DrawString($"Método: PayPal", fontText, XBrushes.Black, 50, y); y += spacing;
-                    gfx.DrawString($"Cliente ID: {servicio.ClienteId}", fontText, XBrushes.Black, 50, y);
-
-                    doc.Save(pdfPath);
+                    doc.Save(stream, false);
+                    stream.Seek(0, System.IO.SeekOrigin.Begin);
+                    return File(stream.ToArray(), "application/pdf", $"Comprobante_{servicio.Id}.pdf");
                 }
             }
-
-            var pdfUrl = Url.Content($"~/comprobantes/Comprobante_{servicio.Id}.pdf");
-            return Redirect(pdfUrl);
         }
-
+        
         [HttpGet]
         public IActionResult MisEstadisticas(DateTime? desde, DateTime? hasta)
         {
