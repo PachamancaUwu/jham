@@ -7,6 +7,7 @@
     var especialidades = abogados.Select(a => a.Especialidad).Distinct().ToList();
 }
 <link rel="stylesheet" href="~/css/cita.css" />
+<link rel="stylesheet" href="~/css/cita-modal.css" />
 <div class="cita-container">
     <div class="cita-header">
         <img src="~/imagenes/re1.png" alt="Logo Consultorio" class="cita-logo">
@@ -100,10 +101,18 @@
                             <a asp-action="EditarCita" asp-controller="AgendadoCita" asp-route-servicioId="@servicio.Id" class="btn btn-warning" style="min-width:90px;">
                                 Reprogramar
                             </a>
-                            <form asp-action="CancelarCita" asp-controller="AgendadoCita" method="post" style="margin: 0;" onsubmit="return confirm('¿Estás seguro de cancelar esta cita?');">
-                                <input type="hidden" name="servicioId" value="@servicio.Id" />
-                                <button type="submit" class="btn btn-danger" style="min-width:100px;">Cancelar</button>
-                            </form>
+                            <button type="button" class="btn btn-danger btn-cancelar" data-servicio-id="@servicio.Id" style="min-width:100px; display:flex; gap:8px; align-items:center;">
+                                <span aria-hidden="true" style="display:inline-flex;align-items:center;">
+                                    <!-- Icono pequeño dentro del botón -->
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                        <path d="M3 6h18" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M10 11v6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M14 11v6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                                Cancelar
+                            </button>
                         </div>
                     }
 
@@ -141,6 +150,54 @@
                         abogadoSelect.appendChild(option);
                     });
             }
+        });
+    </script>
+
+    <!-- Modal de confirmación de cancelación -->
+    <div class="modal fade" id="confirmCancelModal" tabindex="-1" aria-labelledby="confirmCancelModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title" id="confirmCancelModalLabel">Confirmar cancelación</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body text-center">
+            <div class="confirm-icon mx-auto" role="img" aria-hidden="true">
+                <!-- Icono animado grande -->
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" stroke="#e74c3c" stroke-width="1.5" fill="#fff"/>
+                    <path d="M9 11l2 2 4-4" stroke="#e74c3c" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <p class="mt-2">¿Estás seguro de que deseas cancelar esta cita? Esta acción no se puede deshacer.</p>
+          </div>
+          <div class="modal-footer">
+            <form id="cancelForm" asp-action="CancelarCita" asp-controller="AgendadoCita" method="post">
+              @Html.AntiForgeryToken()
+              <input type="hidden" name="servicioId" id="modalServicioId" value="" />
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+              <button type="submit" class="btn btn-danger btn-confirm-pulse">Sí, cancelar cita</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+        // Mostrar modal al pulsar cancelar y rellenar el id
+        document.addEventListener('DOMContentLoaded', function () {
+            const cancelButtons = document.querySelectorAll('.btn-cancelar');
+            const modalEl = document.getElementById('confirmCancelModal');
+            const modalServicioId = document.getElementById('modalServicioId');
+            const bsModal = new bootstrap.Modal(modalEl, {});
+
+            cancelButtons.forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const servicioId = this.getAttribute('data-servicio-id');
+                    modalServicioId.value = servicioId;
+                    bsModal.show();
+                });
+            });
         });
     </script>
 }
