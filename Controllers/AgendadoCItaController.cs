@@ -334,11 +334,12 @@ namespace jhampro.Controllers
                 int y = 100;
                 int spacing = 30;
 
-                gfx.DrawString($"Servicio ID: {servicio.Id}", fontText, XBrushes.Black, 50, y); y += spacing;
+                gfx.DrawString($"ID : {servicio.Id}", fontText, XBrushes.Black, 50, y); y += spacing;
+                gfx.DrawString($"Servicio : {servicio.TipoServicio}", fontText, XBrushes.Black, 50, y); y += spacing;
                 gfx.DrawString($"Fecha de Pago: {servicio.FechaInicio:yyyy-MM-dd HH:mm}", fontText, XBrushes.Black, 50, y); y += spacing;
                 gfx.DrawString($"Monto: $50.00", fontText, XBrushes.Black, 50, y); y += spacing;
                 gfx.DrawString($"Metodo: PayPal", fontText, XBrushes.Black, 50, y); y += spacing;
-                gfx.DrawString($"Cliente ID: {servicio.ClienteId}", fontText, XBrushes.Black, 50, y);
+                gfx.DrawString($"Cliente: {servicio.Cliente.Nombres}{servicio.Cliente.Apellidos}", fontText, XBrushes.Black, 50, y);
 
                 using (var stream = new System.IO.MemoryStream())
                 {
