@@ -71,7 +71,7 @@ namespace jhampro.Controllers
             var uniqueFileName = $"{Guid.NewGuid()}_{Archivo.FileName}";
             var objectName = $"admin_documents/{uniqueFileName}"; // Ruta completa en Firebase Storage
 
-            string fileStoragePath = null; // Guardará el 'objectName'
+            string? fileStoragePath = null; // Guardará el 'objectName'
 
             try
             {
@@ -133,7 +133,7 @@ namespace jhampro.Controllers
         public async Task<IActionResult> DescargarSeguro(int id)
         {
             // **IMPORTANTE: AUTORIZACIÓN**
-            
+
             // Aquí debes implementar la lógica para asegurar que solo un administrador
             // AUTENTICADO y AUTORIZADO puede descargar el archivo.
             // Ejemplo:
@@ -178,7 +178,8 @@ namespace jhampro.Controllers
                         FileName = documento.NombreArchivo, // Nombre original del archivo para la descarga
                         Inline = false // Esto fuerza la descarga en lugar de intentar mostrarlo en el navegador
                     };
-                    Response.Headers.Add("Content-Disposition", contentDisposition.ToString());
+                    // Use el indexador para setear el header (Add puede lanzar si ya existe)
+                    Response.Headers["Content-Disposition"] = contentDisposition.ToString();
 
                     // Envía el archivo al navegador del usuario
                     return File(memoryStream.ToArray(), contentType);
@@ -254,6 +255,99 @@ namespace jhampro.Controllers
                 Console.Error.WriteLine($"Error general al eliminar el archivo: {ex.Message}");
                 TempData["Error"] = $"Error general al eliminar el documento: {ex.Message}";
                 return RedirectToAction("Ver");
+            }
+        }
+
+        // GET: Mostrar formulario de actualización
+        public async Task<IActionResult> Actualizar(int id)
+        {
+            var documento = await _context.Documentos.FindAsync(id);
+            if (documento == null)
+            {
+                return NotFound();
+            }
+
+            return View(documento);
+        }
+
+        // POST: Procesar actualización del documento (reemplazo opcional de archivo)
+        [HttpPost]
+        public async Task<IActionResult> Actualizar(Documento model, IFormFile Archivo)
+        {
+            // **IMPORTANTE: AUTORIZACIÓN** - aplicar según necesidad
+
+            var documento = await _context.Documentos.FindAsync(model.Id);
+            if (documento == null)
+            {
+                return NotFound();
+            }
+
+            // Actualizar campos editables
+            documento.Observacion = model.Observacion;
+            documento.ServicioId = model.ServicioId;
+
+            var firebaseBucketName = _configuration["Firebase:StorageBucketName"] ?? "jham-docs.firebasestorage.app";
+
+            try
+            {
+                if (Archivo != null && Archivo.Length > 0)
+                {
+                    // Subir nuevo archivo
+                    var uniqueFileName = $"{Guid.NewGuid()}_{Archivo.FileName}";
+                    var objectName = $"admin_documents/{uniqueFileName}";
+
+                    using (var newMemoryStream = new MemoryStream())
+                    {
+                        await Archivo.CopyToAsync(newMemoryStream);
+                        newMemoryStream.Position = 0;
+
+                        await _storageClient.UploadObjectAsync(
+                            bucket: firebaseBucketName,
+                            objectName: objectName,
+                            contentType: Archivo.ContentType,
+                            source: newMemoryStream
+                        );
+                    }
+
+                    // Intentar eliminar el archivo anterior en Storage (si existe)
+                    if (!string.IsNullOrEmpty(documento.RutaArchivo))
+                    {
+                        try
+                        {
+                            await _storageClient.DeleteObjectAsync(firebaseBucketName, documento.RutaArchivo);
+                        }
+                        catch (Exception exDel)
+                        {
+                            // No bloqueamos la actualización si la eliminación falla; simplemente lo registramos
+                            Console.Error.WriteLine($"No se pudo eliminar el objeto antiguo de Storage: {exDel.Message}");
+                        }
+                    }
+
+                    // Actualizar metadatos en la entidad
+                    documento.NombreArchivo = Archivo.FileName;
+                    documento.RutaArchivo = objectName;
+                    documento.ContentType = Archivo.ContentType;
+                    documento.FechaSubida = DateTime.UtcNow;
+                }
+
+                _context.Documentos.Update(documento);
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = "Documento actualizado correctamente.";
+                // Después de actualizar, redirigimos a la lista para que el usuario pueda descargar manualmente
+                return RedirectToAction("Ver");
+            }
+            catch (Google.GoogleApiException gapiEx)
+            {
+                Console.Error.WriteLine($"Error de Google API al actualizar: {gapiEx.Message}");
+                ModelState.AddModelError("Archivo", $"Error al procesar el archivo: {gapiEx.Message}");
+                return View(documento);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error general al actualizar el archivo: {ex.Message}");
+                ModelState.AddModelError("Archivo", $"Error general al actualizar el documento: {ex.Message}");
+                return View(documento);
             }
         }
     }
