@@ -4,8 +4,11 @@ using jhampro.Service;
 using Amazon.S3;
 using Amazon;
 using Amazon.Extensions.NETCore.Setup;
-using Amazon.Runtime; // 👈 Importante
-
+using Amazon.Runtime;
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
+using System.IO;
+using Google.Cloud.Storage.V1; // ¡Necesitamos este using para StorageClient!
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +42,36 @@ builder.Services.AddAWSService<IAmazonS3>(); // Ahora sí funcionará correctame
 
 // Registrar font resolver global
 PdfSharpCore.Fonts.GlobalFontSettings.FontResolver = new CustomFontResolver();
+
+
+// --- INICIALIZACIÓN DE FIREBASE ADMIN SDK Y REGISTRO DE STORAGECLIENT ---
+// Ruta a tu archivo de clave de cuenta de servicio.
+// Asegúrate de que esta ruta sea correcta y el archivo esté protegido.
+var serviceAccountPath = Path.Combine(builder.Environment.ContentRootPath, "Properties", "jham-docs-firebase-adminsdk-fbsvc-ce7a548c39.json");
+
+GoogleCredential credential = null; // Declaramos la credencial aquí para usarla más adelante
+
+try
+{
+    credential = GoogleCredential.FromFile(serviceAccountPath); // Cargamos la credencial
+    FirebaseApp.Create(new AppOptions()
+    {
+        Credential = credential // Usamos la credencial cargada para FirebaseApp
+    });
+
+    Console.WriteLine("Firebase Admin SDK inicializado correctamente.");
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine($"Error al inicializar Firebase Admin SDK: {ex.Message}");
+    // Es crucial que la aplicación no continúe si no puede autenticarse con Firebase.
+    // Lanza la excepción para que el inicio de la app falle si las credenciales no son válidas.
+    throw;
+}
+
+// ¡IMPORTANTE! Registramos StorageClient con la credencial cargada.
+// Esto permite que tus controladores inyecten StorageClient y se autentiquen correctamente.
+builder.Services.AddSingleton(StorageClient.Create(credential));
 
 
 var app = builder.Build();

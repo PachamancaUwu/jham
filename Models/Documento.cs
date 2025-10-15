@@ -17,6 +17,8 @@ namespace jhampro.Models
 
         public DateTime FechaSubida { get; set; }
 
+        public string ContentType { get; set; }
+
         public string? Observacion { get; set; }
 
         public int ServicioId { get; set; }
