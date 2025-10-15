@@ -133,13 +133,14 @@ namespace jhampro.Controllers
         public async Task<IActionResult> DescargarSeguro(int id)
         {
             // **IMPORTANTE: AUTORIZACIÓN**
+            
             // Aquí debes implementar la lógica para asegurar que solo un administrador
             // AUTENTICADO y AUTORIZADO puede descargar el archivo.
             // Ejemplo:
-            if (!User.Identity.IsAuthenticated || !User.IsInRole("Admin"))
-            {
-                return Forbid(); // HTTP 403 Forbidden - O redirige a la página de login
-            }
+            // if (!User.Identity.IsAuthenticated || !User.IsInRole("Admin"))
+            // {
+            //     return Forbid(); // HTTP 403 Forbidden - O redirige a la página de login
+            // }
 
             var documento = await _context.Documentos.FindAsync(id);
             if (documento == null)
