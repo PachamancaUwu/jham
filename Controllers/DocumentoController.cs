@@ -10,6 +10,10 @@ using System.IO;
 using System.Threading.Tasks;
 using System; // Necesario para Guid
 using System.Net.Mime; // Necesario para ContentDisposition
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Text; // Para Encoding
+using System.Net; // Para WebUtility
 
 namespace jhampro.Controllers
 {
@@ -55,7 +59,6 @@ namespace jhampro.Controllers
         [HttpPost]
         public async Task<IActionResult> Gestionar(Documento model, IFormFile Archivo)
         {
-            // **IMPORTANTE: AUTORIZACIÓN**
             // Aquí debes implementar la lógica para asegurar que solo un administrador puede subir archivos.
             // Ejemplo: if (!User.Identity.IsAuthenticated || !User.IsInRole("Admin")) { return Forbid(); }
 
@@ -132,7 +135,6 @@ namespace jhampro.Controllers
         // Este método será llamado desde tu interfaz de usuario
         public async Task<IActionResult> DescargarSeguro(int id)
         {
-            // **IMPORTANTE: AUTORIZACIÓN**
 
             // Aquí debes implementar la lógica para asegurar que solo un administrador
             // AUTENTICADO y AUTORIZADO puede descargar el archivo.
@@ -172,14 +174,23 @@ namespace jhampro.Controllers
                     // Determina el Content-Type. Si lo guardaste en DB, úsalo.
                     string contentType = documento.ContentType ?? "application/octet-stream"; // Usa el guardado o un default
 
-                    // Configura el encabezado Content-Disposition para forzar la descarga
-                    var contentDisposition = new ContentDisposition
-                    {
-                        FileName = documento.NombreArchivo, // Nombre original del archivo para la descarga
-                        Inline = false // Esto fuerza la descarga en lugar de intentar mostrarlo en el navegador
-                    };
+                    // 1. Sanitiza el nombre del archivo para eliminar cualquier carácter de control o no válido.
+                    //    Mantenemos el SanitizeFileNameForHeader porque es una buena práctica para limpiar chars invisibles
+                    //    que no son tildes.
+                    string originalFileName = documento.NombreArchivo;
+                    string sanitizedFileName = SanitizeFileNameForHeader(originalFileName);
+
+                    // 2. Codifica el nombre del archivo usando URL encoding y RFC 5987.
+                    //    Esta es la forma correcta de manejar caracteres no-ASCII en Content-Disposition.
+                    //    Ejemplo: filename*=utf-8''nombre%20con%C3%B1.pdf
+                    string encodedFileName = WebUtility.UrlEncode(sanitizedFileName);
+
+                    // Construye el Content-Disposition manualmente para asegurar la codificación RFC 5987.
+                    // Esto es más robusto que depender de ContentDisposition.ToString() para caracteres especiales.
+                    string contentDispositionHeader = $"attachment; filename*=UTF-8''{encodedFileName}";
+
                     // Use el indexador para setear el header (Add puede lanzar si ya existe)
-                    Response.Headers["Content-Disposition"] = contentDisposition.ToString();
+                    Response.Headers["Content-Disposition"] = contentDispositionHeader;
 
                     // Envía el archivo al navegador del usuario
                     return File(memoryStream.ToArray(), contentType);
@@ -203,12 +214,58 @@ namespace jhampro.Controllers
             }
         }
 
+        private string SanitizeFileNameForHeader(string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return "downloaded_file";
+            }
+
+            // Eliminar caracteres de control (incluyendo 0x000D, 0x000A, etc.)
+            string sanitized = Regex.Replace(fileName, @"[\p{C}]", string.Empty);
+
+            // Reemplazar caracteres no permitidos en nombres de archivo (Windows/Linux)
+            char[] invalidChars = Path.GetInvalidFileNameChars();
+            foreach (char c in invalidChars)
+            {
+                sanitized = sanitized.Replace(c.ToString(), "_");
+            }
+            sanitized = sanitized.Replace(":", "_").Replace("/", "_").Replace("\\", "_");
+
+            // Recortar espacios y manejar casos de nombres vacíos
+            sanitized = Regex.Replace(sanitized, @"\s+", " ").Trim();
+            if (sanitized.StartsWith("."))
+            {
+                sanitized = sanitized.Substring(1);
+            }
+            if (string.IsNullOrEmpty(sanitized))
+            {
+                return "downloaded_file";
+            }
+
+            // Opcional: Limitar la longitud (si es un nombre muy largo)
+            if (sanitized.Length > 200)
+            {
+                int lastDotIndex = sanitized.LastIndexOf('.');
+                if (lastDotIndex != -1 && lastDotIndex > (sanitized.Length - 10))
+                {
+                    string extension = sanitized.Substring(lastDotIndex);
+                    sanitized = sanitized.Substring(0, 200 - extension.Length) + extension;
+                }
+                else
+                {
+                    sanitized = sanitized.Substring(0, 200);
+                }
+            }
+
+            return sanitized;
+        }
+
 
         // ✅ Eliminar documento - Adaptado para Firebase Storage
         [HttpPost]
         public async Task<IActionResult> Eliminar(int id)
         {
-            // **IMPORTANTE: AUTORIZACIÓN**
             // Aquí debes implementar la lógica para asegurar que solo un administrador
             // AUTENTICADO y AUTORIZADO puede eliminar el archivo.
             // Ejemplo:
@@ -295,6 +352,7 @@ namespace jhampro.Controllers
                     // Subir nuevo archivo
                     var uniqueFileName = $"{Guid.NewGuid()}_{Archivo.FileName}";
                     var objectName = $"admin_documents/{uniqueFileName}";
+                    string? fileStoragePath = null; // Guardará el 'objectName'
 
                     using (var newMemoryStream = new MemoryStream())
                     {
@@ -307,6 +365,7 @@ namespace jhampro.Controllers
                             contentType: Archivo.ContentType,
                             source: newMemoryStream
                         );
+                        fileStoragePath = objectName;
                     }
 
                     // Intentar eliminar el archivo anterior en Storage (si existe)
@@ -325,7 +384,7 @@ namespace jhampro.Controllers
 
                     // Actualizar metadatos en la entidad
                     documento.NombreArchivo = Archivo.FileName;
-                    documento.RutaArchivo = objectName;
+                    documento.RutaArchivo = fileStoragePath;
                     documento.ContentType = Archivo.ContentType;
                     documento.FechaSubida = DateTime.UtcNow;
                 }
