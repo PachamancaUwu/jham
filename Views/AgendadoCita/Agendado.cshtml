@@ -88,6 +88,19 @@
                 var fechaPeru = TimeZoneInfo.ConvertTimeFromUtc(servicio.FechaInicio, peruTz);
                 <div class="servicio-card">
                     <p><strong>Número orden:</strong> @servicio.Id</p>
+                    <p><strong>Abogado encargado:</strong>
+                        @if (servicio.AbogadoServicios != null && servicio.AbogadoServicios.Any())
+                        {
+                            foreach (var rel in servicio.AbogadoServicios)
+                            {
+                                <span>@rel.Abogado.Nombres @rel.Abogado.Apellidos</span>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted">Sin asignar</span>
+                        }
+                    </p>
                     <p><strong>Fecha:</strong> @fechaPeru.ToString("dd/MM/yyyy HH:mm")</p>
                     <p class="servicio-estado @estadoClase">@servicio.Estado</p>
 

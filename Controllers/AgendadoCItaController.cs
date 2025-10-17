@@ -41,6 +41,8 @@ namespace jhampro.Controllers
                 Servicios = _context.Servicios
                     .Where(s => s.ClienteId == clienteId)
                     .Include(s => s.Pago)
+                    .Include(s => s.AbogadoServicios)
+                        .ThenInclude(r => r.Abogado)
                     .ToList()
             };
             return View(model);

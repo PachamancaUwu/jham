@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 
 namespace jhampro.Models
@@ -45,6 +46,7 @@ namespace jhampro.Models
         public ICollection<Servicio> ServiciosComoCliente { get; set; } = new List<Servicio>();
 
         // Relación muchos a muchos (Abogado a Servicio)
+        [JsonIgnore]
         public ICollection<AbogadoServicio> AbogadoServicios { get; set; } = new List<AbogadoServicio>();
 
         public string Especialidad { get; set; } = "ClienteNormal";
