@@ -32,7 +32,7 @@
                     <tr>
                         <td class="text-center">@doc.Id</td>
                         <td>
-                            <a href="@doc.RutaArchivo" target="_blank" class="btn btn-outline-primary btn-sm">
+                            <a asp-action="DescargarSeguro" asp-route-id="@doc.Id" target="_blank" class="btn btn-outline-primary btn-sm">
                                 @doc.NombreArchivo
                             </a>
                         </td>
@@ -40,7 +40,10 @@
                         <td>@doc.Observacion</td>
                         <td class="text-center">@doc.ServicioId</td>
                         <td class="text-center">
-                            <a href="@doc.RutaArchivo" target="_blank" class="btn btn-sm btn-success me-1" title="Descargar">
+                            <a asp-action="Actualizar" asp-route-id="@doc.Id" target="_blank" class="btn btn-sm btn-success me-1" title="Actualizar">
+                                <i class="bi bi-download"></i> Actualizar
+                            </a>
+                            <a asp-action="DescargarSeguro" asp-route-id="@doc.Id" target="_blank" class="btn btn-sm btn-success me-1" title="Descargar">
                                 <i class="bi bi-download"></i> Descargar
                             </a>
 
@@ -55,4 +58,15 @@
             </tbody>
         </table>
     }
+</div>
+
+<!-- Botón para subir nuevo documento (siempre visible en la parte inferior) -->
+<div class="container mt-3 mb-5">
+    <div class="row">
+        <div class="col-md-6 offset-md-3 text-center">
+            <a asp-action="Gestionar" class="btn btn-primary btn-sm w-50">
+                <i class="bi bi-upload"></i> Subir documento nuevo
+            </a>
+        </div>
+    </div>
 </div>

@@ -9,6 +9,8 @@
   <ItemGroup>
     <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="4.0.1" />
     <PackageReference Include="AWSSDK.S3" Version="4.0.1.5" />
+    <PackageReference Include="FirebaseAdmin" Version="3.4.0" />
+    <PackageReference Include="Google.Cloud.Storage.V1" Version="4.13.0" />
     <PackageReference Include="itext7" Version="9.2.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
@@ -24,5 +26,8 @@
     <PackageReference Include="Oracle.EntityFrameworkCore" Version="9.23.80" />
     <PackageReference Include="PayPalCheckoutSdk" Version="1.0.4" />
     <PackageReference Include="PdfSharpCore" Version="1.3.67" />
+    <None Update="Properties\jham-docs-firebase-adminsdk-fbsvc-ce7a548c39.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>
