@@ -1,6 +1,169 @@
+@model IEnumerable<jhampro.Models.Servicio>
+
 @{
     ViewData["Title"] = "Panel de Administración";
 }
 
-<h2>Bienvenido, @ViewBag.UsuarioNombre</h2>
-<p>Este es tu panel de administración.</p>
+<div class="container mt-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header text-white d-flex justify-content-between align-items-center rounded-top-4">
+            <h4 class="mb-0">Panel de Administración</h4>
+            <span class="fw-bold">@DateTime.Now.ToString("dd/MM/yyyy")</span>
+        </div>
+
+        <div class="card-body">
+            <h5 class="mb-4 text-secondary">
+                Bienvenido, <span class="text-dark fw-semibold">@ViewBag.UsuarioNombre</span>
+            </h5>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle text-center" id="tablaServicios">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>ID</th>
+                            <th>Cliente</th>
+                            <th>Tipo Servicio</th>
+                            <th>Fecha Inicio</th>
+                            <th>Fecha Fin</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr data-id="@item.Id">
+                                <td>@item.Id</td>
+                                <td>@item.Cliente?.Nombres @item.Cliente?.Apellidos</td>
+                                <td>@item.TipoServicio</td>
+                                <td>@item.FechaInicio.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@item.FechaFin?.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="estado-cell">
+                                    <span class="badge @GetEstadoClase(item.Estado)">@item.Estado</span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-success me-2 btn-editar" title="Editar Estado">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetEstadoClase(string estado)
+    {
+        return estado switch
+        {
+            "Pagado" => "bg-success text-white",
+            "EnEspera" => "bg-warning text-dark",
+            "Cancelado" => "bg-danger text-white",
+            _ => "bg-secondary text-white"
+        };
+    }
+}
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            $('#tablaServicios').DataTable({
+                language: {
+                    url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
+                },
+                order: [[0, 'desc']],
+                pageLength: 10
+            });
+
+            const estados = ["Pagado", "EnEspera", "Cancelado"];
+
+            // Evento para el botón Editar
+            $(document).on("click", ".btn-editar", function () {
+                const fila = $(this).closest("tr");
+                const id = fila.data("id");
+                const estadoCell = fila.find(".estado-cell");
+                const estadoActual = estadoCell.text().trim();
+
+                // Crear un select temporal
+                const select = $("<select>").addClass("form-select form-select-sm");
+                estados.forEach(opcion => {
+                    const opt = $("<option>").val(opcion).text(opcion);
+                    if (opcion === estadoActual) opt.prop("selected", true);
+                    select.append(opt);
+                });
+
+                // Reemplazar el contenido del estado por el select
+                estadoCell.html(select);
+
+                // Evento al cambiar
+                select.on("change", function () {
+                    const nuevoEstado = $(this).val();
+
+                    // Petición AJAX
+                    $.ajax({
+                        url: '/Admin/ActualizarEstado',
+                        type: 'POST',
+                        data: { id: id, nuevoEstado: nuevoEstado },
+                        success: function (response) {
+                            if (response.success) {
+                                const badgeClass = getEstadoClase(nuevoEstado);
+                                estadoCell.html(`<span class="badge ${badgeClass}">${nuevoEstado}</span>`);
+                            } else {
+                                alert("Error al actualizar el estado.");
+                            }
+                        },
+                        error: function () {
+                            alert("Error en la conexión con el servidor.");
+                        }
+                    });
+                });
+            });
+
+            function getEstadoClase(estado) {
+                switch (estado) {
+                    case "Pagado": return "bg-success text-white";
+                    case "EnEspera": return "bg-warning text-dark";
+                    case "Cancelado": return "bg-danger text-white";
+                    default: return "bg-secondary text-white";
+                }
+            }
+        });
+    </script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
+    <style>
+        .card-header {
+            background-color: #111;
+            color: #c9ad84 !important;
+        }
+        .card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        table th {
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+        .table-hover tbody tr:hover {
+            background-color: #f8f9fa;
+            cursor: pointer;
+        }
+        select.form-select {
+            width: 150px;
+            margin: auto;
+        }
+    </style>
+}
