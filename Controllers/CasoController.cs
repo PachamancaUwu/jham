@@ -59,11 +59,6 @@ namespace jhampro.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Valoracion(int id, jhampro.Models.ViewModels.ValoracionViewModel model)
         {
-            // Debug/logging for troubleshooting saving issues
-            _logger.LogInformation("POST Valoracion called for servicioId={id}. Model: Calificacion={cal}, ComentarioLen={len}, Publico={pub}", 
-                id, model?.Calificacion, model?.Comentario?.Length ?? 0, model?.Publico);
-
-            TempData["Debug"] = $"Entrada: servicioId={id}, calificacion={model?.Calificacion}, comentarioLen={model?.Comentario?.Length ?? 0}, publico={model?.Publico}";
 
             var servicio = _context.Servicios.FirstOrDefault(s => s.Id == id && s.TipoServicio == "Cita");
             if (servicio == null) return NotFound();
