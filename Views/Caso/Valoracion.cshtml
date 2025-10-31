@@ -42,7 +42,7 @@
 
         <div class="form-check">
             <input asp-for="Publico" class="form-check-input" />
-            <label class="form-check-label" asp-for="Publico">Hacer público mi comentario</label>
+            <label class="form-check-label" asp-for="Publico">¿Desea que su comentario<br/>aparezca en la página principal?</label>
             <span asp-validation-for="Publico" class="text-danger"></span>
         </div>
 
@@ -54,12 +54,3 @@
 </div>
 
 <style>
-.valoracion-container { max-width: 700px; margin: 30px auto; background: #fff; padding: 20px; border-radius: 6px; }
-.rating-input { display: inline-block; direction: rtl; unicode-bidi: bidi-override; }
-.rating-input input { display: none; }
-.rating-input label { cursor: pointer; font-size: 28px; color: #ddd; margin-left: 6px; }
-.rating-input label:hover,
-.rating-input label:hover ~ label,
-.rating-input input:checked ~ label { color: gold; }
-</style>
-</style>
