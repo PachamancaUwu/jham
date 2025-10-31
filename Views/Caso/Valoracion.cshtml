@@ -1,0 +1,65 @@
+@model jhampro.Models.ViewModels.ValoracionViewModel
+@{
+    ViewData["Title"] = "Valoración";
+}
+
+<link rel="stylesheet" href="~/css/valoracion.css" />
+
+<div class="valoracion-container">
+    <h1>Valoración</h1>
+
+    @if (TempData["MensajeExito"] != null)
+    {
+        <div class="alert alert-success">@TempData["MensajeExito"]</div>
+    }
+
+    <form asp-action="Valoracion" asp-controller="Caso" asp-route-id="@Model.ServicioId" method="post">
+        @Html.AntiForgeryToken()
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+        @* Hidden para asegurar binding del ServicioId cuando se re-renderiza la vista *@
+        <input type="hidden" name="ServicioId" value="@Model.ServicioId" />
+
+        <div class="form-group">
+            <label>Puntuación</label>
+            <div class="rating-input">
+                @* Usamos inputs con ids y labels hermanos en orden descendente para facilitar el CSS que pinta las estrellas de izquierda a derecha *@
+                @for (int i = 5; i >= 1; i--)
+                {
+                    var id = "star" + i;
+                    <input type="radio" id="@id" name="Calificacion" value="@i" @(Model.Calificacion == i ? "checked" : "") required />
+                    <label for="@id" title="@i estrellas">★</label>
+                }
+            </div>
+            @Html.ValidationMessageFor(m => m.Calificacion, "", new { @class = "text-danger" })
+        </div>
+
+        <div class="form-group">
+            <label>Comentario</label>
+            <textarea asp-for="Comentario" class="form-control" rows="5"></textarea>
+            <span asp-validation-for="Comentario" class="text-danger"></span>
+        </div>
+
+        <div class="form-check">
+            <input asp-for="Publico" class="form-check-input" />
+            <label class="form-check-label" asp-for="Publico">Hacer público mi comentario</label>
+            <span asp-validation-for="Publico" class="text-danger"></span>
+        </div>
+
+        <div style="margin-top:15px;">
+            <button type="submit" class="btn btn-primary">Enviar</button>
+            <a asp-action="Agendado" asp-controller="AgendadoCita" class="btn btn-secondary">Volver</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.valoracion-container { max-width: 700px; margin: 30px auto; background: #fff; padding: 20px; border-radius: 6px; }
+.rating-input { display: inline-block; direction: rtl; unicode-bidi: bidi-override; }
+.rating-input input { display: none; }
+.rating-input label { cursor: pointer; font-size: 28px; color: #ddd; margin-left: 6px; }
+.rating-input label:hover,
+.rating-input label:hover ~ label,
+.rating-input input:checked ~ label { color: gold; }
+</style>
+</style>

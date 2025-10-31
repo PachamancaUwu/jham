@@ -14,6 +14,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<AbogadoServicio> AbogadoServicio { get; set; }
     
     public DbSet<Documento> Documentos { get; set; }
+    public DbSet<Retroalimentacion> Retroalimentaciones { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Relación uno a muchos (Cliente a Servicio)
@@ -43,11 +44,12 @@ public class ApplicationDbContext : DbContext
             .WithOne(p => p.Servicio)
             .HasForeignKey<Pago>(p => p.ServicioId);
 
-        // Relación uno a uno (Retroalimentación a Servicio)
+        // Relación uno a muchos (Servicio a Retroalimentaciones)
         modelBuilder.Entity<Servicio>()
-            .HasOne(r => r.Retroalimentacion)
-            .WithOne(p => p.Servicio)
-            .HasForeignKey<Retroalimentacion>(p => p.ServicioId);
+            .HasMany(s => s.Retroalimentaciones)
+            .WithOne(r => r.Servicio)
+            .HasForeignKey(r => r.ServicioId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         // Relación uno a muchos (Servicio a Documento)
         modelBuilder.Entity<Documento>()
