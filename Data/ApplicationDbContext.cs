@@ -12,8 +12,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<Usuario> Usuarios { get; set; }
     public DbSet<Servicio> Servicios { get; set; }
     public DbSet<AbogadoServicio> AbogadoServicio { get; set; }
-    
+    public DbSet<Retroalimentacion> Retroalimentaciones { get; set; } // AGREGAR ESTA LÍNEA
+    public DbSet<Pago> Pagos { get; set; } // También agregar Pagos si no lo tienes
     public DbSet<Documento> Documentos { get; set; }
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Relación uno a muchos (Cliente a Servicio)
