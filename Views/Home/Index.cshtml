@@ -1,20 +1,121 @@
-﻿@{
+﻿@model List<jhampro.Models.Retroalimentacion>
+@{
     ViewData["Title"] = "Home Page";
 }
 
-<section class="fade-in hero d-flex align-items-center text-center" 
+<section class="fade-in hero d-flex align-items-center text-center"
     style="background-image: url('@Url.Content("~/img/banner.webp")'); background-size: cover; background-position: center;  height: 90vh;">
     <div class="container">
-        <div style="background-color: rgba(205, 209, 211, 0.7); padding: 2rem; border-radius: 0.5rem;"> <!-- Fondo personalizado -->
+        <div style="background-color: rgba(205, 209, 211, 0.7); padding: 2rem; border-radius: 0.5rem;">
+            <!-- Fondo personalizado -->
             <h1 class="display-4 fw-bold text-dark">Defendemos tus derechos</h1>
             <p class="lead mt-4 text-dark">Experiencia, ética y compromiso legal a tu servicio.</p>
-            
+
         </div>
     </div>
 </section>
 
+<!-- Sección de Valoraciones -->
+<section class="py-5 fade-in" style="background-color: #f8f9fa;">
+    <div class="container">
+        <h2 class="fw-bold text-center mb-4">Lo que dicen nuestros clientes</h2>
+        <p class="text-center mb-5">Testimonios reales de personas que confiaron en nosotros</p>
 
+        <div class="row g-4">
+            @if (Model != null && Model.Any())
+            {
+                @foreach (var retroalimentacion in Model)
+                {
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100 p-4 transition hover-shadow">
 
+                            <!-- Comentario -->
+                            <p class="mb-4 text-center" style="font-style: italic; color: #555; min-height: 80px;">
+                                "@(retroalimentacion?.Comentario ?? "Sin comentario")"
+                            </p>
+
+                            <!-- Nombre del usuario -->
+                            @if (retroalimentacion?.Servicio?.Cliente != null)
+                            {
+                                <div class="d-flex align-items-center justify-content-center border-top pt-3">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                        style="width: 45px; height: 45px; font-weight: bold; background-color: #0d2b3b; color: white;">
+                                        @if (!string.IsNullOrEmpty(retroalimentacion.Servicio.Cliente.Nombres))
+                                        {
+                                            @retroalimentacion.Servicio.Cliente.Nombres.Substring(0, 1).ToUpper()
+                                        }
+                                        else
+                                        {
+                                            <text>?</text>
+                                        }
+                                    </div>
+                                    <div class="ms-3">
+                                        <h6 class="mb-0 fw-bold">
+                                            @(retroalimentacion.Servicio.Cliente.Nombres ?? "Usuario")
+                                            @(retroalimentacion.Servicio.Cliente.Apellidos ?? "")
+                                        </h6>
+                                        <small class="text-muted">Cliente verificado</small>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="d-flex align-items-center justify-content-center border-top pt-3">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                        style="width: 45px; height: 45px; font-weight: bold; background-color: #0d2b3b; color: white;">
+                                        ?
+                                    </div>
+                                    <div class="ms-3">
+                                        <h6 class="mb-0 fw-bold">Usuario Anónimo</h6>
+                                        <small class="text-muted">Cliente verificado</small>
+                                    </div>
+                                </div>
+                            }
+                            <!-- Estrellas -->
+                            <div class="mb-3 text-center">
+                                @{
+                                    int calificacion = retroalimentacion?.Calificacion ?? 0;
+                                }
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    if (i <= calificacion)
+                                    {
+                                        <i class="bi bi-star-fill" style="color: #ffc107; font-size: 1.2rem;"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-star" style="color: #ddd; font-size: 1.2rem;"></i>
+                                    }
+                                }
+                            </div>
+                        </div>
+
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12 text-center">
+                    <div class="py-5">
+                        <i class="bi bi-chat-quote" style="font-size: 4rem; color: #ddd;"></i>
+                        <p class="text-muted mt-3">Aún no hay valoraciones disponibles</p>
+                        <p class="text-muted">Sé el primero en compartir tu experiencia</p>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (Model != null && Model.Any())
+        {
+            <div class="text-center mt-4">
+                <p class="text-muted">
+                    <i class="bi bi-shield-check"></i>
+                    Valoraciones verificadas de clientes reales
+                </p>
+            </div>
+        }
+    </div>
+</section>
 
 <section class="container my-5">
     <div class="row text-center">
@@ -44,16 +145,14 @@
 
         <blockquote class="tiktok-embed"
             cite="https://www.tiktok.com/@@jham_abogados_asociados/video/7510320102714248454"
-            data-video-id="7510320102714248454"
-            style="max-width: 100%; min-width: 325px; height: 700px;">
+            data-video-id="7510320102714248454" style="max-width: 100%; min-width: 325px; height: 700px;">
             <section>
                 <a target="_blank" title="@@jham_abogados_asociados"
-                   href="https://www.tiktok.com/@@jham_abogados_asociados?refer=embed"
-                   style="font-size: 0; display: none;">@@jham_abogados_asociados</a>
-                
-                <a target="_blank" title="♬ original sound"
-                   href="#"
-                   style="font-size: 0; display: none;">♬ original sound</a>
+                    href="https://www.tiktok.com/@@jham_abogados_asociados?refer=embed"
+                    style="font-size: 0; display: none;">@@jham_abogados_asociados</a>
+
+                <a target="_blank" title="♬ original sound" href="#" style="font-size: 0; display: none;">♬ original
+                    sound</a>
             </section>
         </blockquote>
 
@@ -62,15 +161,17 @@
 </section>
 
 
-<section class="py-5 fade-in"  >
+<section class="py-5 fade-in">
     <div class="container">
         <h2 class="fw-bold text-center mb-4 ">¿Por qué elegirnos?</h2>
-        <p class="text-center mb-5 ">En nuestro bufete trabajamos incansablemente para garantizar justicia y resultados positivos para nuestros clientes.</p>
+        <p class="text-center mb-5 ">En nuestro bufete trabajamos incansablemente para garantizar justicia y resultados
+            positivos para nuestros clientes.</p>
 
         <div class="row g-4">
             <!-- CARD 1 -->
             <div class="col-sm-6 col-md-4">
-                <div class="card border-0 shadow-sm h-100 p-4 text-center transition hover-shadow" style="background-color: #0d2b3b; color: white;">
+                <div class="card border-0 shadow-sm h-100 p-4 text-center transition hover-shadow"
+                    style="background-color: #0d2b3b; color: white;">
                     <i class="bi bi-shield-lock-fill" style="font-size: 2.5rem; color: #b89570;"></i>
                     <h5 class="fw-bold mt-3">Confidencialidad absoluta</h5>
                     <p>Manejamos tu información con total reserva y profesionalismo.</p>
@@ -79,7 +180,8 @@
 
             <!-- CARD 2 -->
             <div class="col-sm-6 col-md-4">
-                <div class="card border-0 shadow-sm h-100 p-4 text-center transition hover-shadow" style="background-color: #0d2b3b; color: white;">
+                <div class="card border-0 shadow-sm h-100 p-4 text-center transition hover-shadow"
+                    style="background-color: #0d2b3b; color: white;">
                     <i class="bi bi-bullseye" style="font-size: 2.5rem; color: #b89570;"></i>
                     <h5 class="fw-bold mt-3">Defensa estratégica</h5>
                     <p>Cada caso es analizado en detalle para construir la mejor estrategia legal.</p>
@@ -88,7 +190,8 @@
 
             <!-- CARD 3 -->
             <div class="col-sm-6 col-md-4">
-                <div class="card border-0 shadow-sm h-100 p-4 text-center transition hover-shadow" style="background-color: #0d2b3b; color: white;">
+                <div class="card border-0 shadow-sm h-100 p-4 text-center transition hover-shadow"
+                    style="background-color: #0d2b3b; color: white;">
                     <i class="bi bi-people-fill" style="font-size: 2.5rem; color: #b89570;"></i>
                     <h5 class="fw-bold mt-3">Asesoramiento integral</h5>
                     <p>Cubrimos todas tus necesidades legales en un solo lugar.</p>
@@ -97,7 +200,8 @@
 
             <!-- CARD 4 -->
             <div class="col-sm-6 col-md-4">
-                <div class="card border-0 shadow-sm h-100 p-4 text-center transition hover-shadow" style="background-color: #0d2b3b; color: white;">
+                <div class="card border-0 shadow-sm h-100 p-4 text-center transition hover-shadow"
+                    style="background-color: #0d2b3b; color: white;">
                     <i class="bi bi-lightning-charge-fill" style="font-size: 2.5rem; color: #b89570;"></i>
                     <h5 class="fw-bold mt-3">Atención ágil</h5>
                     <p>Respondemos con rapidez y eficiencia en cada etapa del proceso.</p>
@@ -106,7 +210,8 @@
 
             <!-- CARD 5 -->
             <div class="col-sm-6 col-md-4">
-                <div class="card border-0 shadow-sm h-100 p-4 text-center transition hover-shadow" style="background-color: #0d2b3b; color: white;">
+                <div class="card border-0 shadow-sm h-100 p-4 text-center transition hover-shadow"
+                    style="background-color: #0d2b3b; color: white;">
                     <i class="bi bi-person-lines-fill" style="font-size: 2.5rem; color: #b89570;"></i>
                     <h5 class="fw-bold mt-3">Red de especialistas</h5>
                     <p>Contamos con profesionales en todas las ramas del derecho.</p>
@@ -115,7 +220,8 @@
 
             <!-- CARD 6 -->
             <div class="col-sm-6 col-md-4">
-                <div class="card border-0 shadow-sm h-100 p-4 text-center transition hover-shadow" style="background-color: #0d2b3b; color: white;">
+                <div class="card border-0 shadow-sm h-100 p-4 text-center transition hover-shadow"
+                    style="background-color: #0d2b3b; color: white;">
                     <i class="bi bi-bar-chart-line-fill" style="font-size: 2.5rem; color: #b89570;"></i>
                     <h5 class="fw-bold mt-3">Resultados comprobados</h5>
                     <p>Historias de éxito que respaldan nuestro trabajo legal.</p>
@@ -124,6 +230,3 @@
         </div>
     </div>
 </section>
-
-
-
