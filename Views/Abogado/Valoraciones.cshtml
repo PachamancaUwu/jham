@@ -1,0 +1,246 @@
+@model List<jhampro.Models.Retroalimentacion>
+@{
+    ViewData["Title"] = "Valoraciones";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Valoraciones</h2>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> No hay valoraciones registradas.
+        </div>
+    }
+    else
+    {
+        <!-- Filtros -->
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <label for="filtroApellidos">Apellidos</label>
+                <input type="text" id="filtroApellidos" class="form-control" placeholder="Filtrar por apellidos">
+            </div>
+            <div class="col-md-3">
+                <label for="filtroNombres">Nombres</label>
+                <input type="text" id="filtroNombres" class="form-control" placeholder="Filtrar por nombres">
+            </div>
+            <div class="col-md-2">
+                <label for="filtroPuntuacion">Puntuación</label>
+                <input type="number" id="filtroPuntuacion" class="form-control" placeholder="1-5" min="1" max="5">
+            </div>
+            <div class="col-md-2">
+                <label for="filtroFecha">Fecha</label>
+                <input type="date" id="filtroFecha" class="form-control">
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary w-100" style="margin-top: 32px;" onclick="filtrarValoraciones()">Filtrar</button>
+            </div>
+        </div>
+
+        <!-- Tabla de valoraciones -->
+        <div class="table-responsive">
+            <table class="table table-striped table-hover" id="tablaValoraciones">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Apellidos</th>
+                        <th>Nombres</th>
+                        <th>Puntuación</th>
+                        <th>Fecha</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var valoracion in Model)
+                    {
+                        <tr data-id="@valoracion.Id">
+                            <td>@(valoracion.Servicio?.Cliente?.Apellidos ?? "N/A")</td>
+                            <td>@(valoracion.Servicio?.Cliente?.Nombres ?? "N/A")</td>
+                            <td>
+                                <span class="badge bg-warning text-dark">
+                                    @valoracion.Calificacion
+                                    <i class="bi bi-star-fill"></i>
+                                </span>
+                            </td>
+                            <td>@valoracion.Fecha.ToString("dd/MM/yyyy")</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-info" onclick="verDetalle(@valoracion.Id)" title="Ver detalle">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="confirmarEliminacion(@valoracion.Id)" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<!-- Modal para ver detalle de valoración -->
+<div class="modal fade" id="modalDetalle" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalle de Valoración</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Cliente:</strong> <span id="detalleCliente"></span></p>
+                <p><strong>Puntuación:</strong> <span id="detalleCalificacion"></span></p>
+                <p><strong>Fecha:</strong> <span id="detalleFecha"></span></p>
+                <p><strong>Comentario:</strong></p>
+                <div class="alert alert-light" id="detalleComentario"></div>
+                <p><strong>Público:</strong> <span id="detallePublico"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación de eliminación -->
+<div class="modal fade" id="modalEliminar" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro que desea eliminar esta valoración?</p>
+                <p class="text-muted">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarEliminar">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let valoracionIdAEliminar = null;
+
+        // Datos completos de las valoraciones para el filtrado
+        const valoraciones = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Select(v => new {
+            Id = v.Id,
+            Apellidos = v.Servicio?.Cliente?.Apellidos ?? "N/A",
+            Nombre = v.Servicio?.Cliente?.Nombres ?? "N/A",
+            Calificacion = v.Calificacion,
+            Fecha = v.Fecha.ToString("dd/MM/yyyy"),
+            FechaOriginal = v.Fecha.ToString("yyyy-MM-dd"),
+            Comentario = v.Comentario ?? "Sin comentario",
+            Publico = v.Publico
+        })));
+
+        // Función para filtrar valoraciones
+        function filtrarValoraciones() {
+            const filtroApellidos = document.getElementById('filtroApellidos').value.toLowerCase();
+            const filtroNombres = document.getElementById('filtroNombres').value.toLowerCase();
+            const filtroPuntuacion = document.getElementById('filtroPuntuacion').value;
+            const filtroFecha = document.getElementById('filtroFecha').value;
+
+            const filas = document.querySelectorAll('#tablaValoraciones tbody tr');
+
+            filas.forEach((fila, index) => {
+                const valoracion = valoraciones[index];
+                let mostrar = true;
+
+                if (filtroApellidos && !valoracion.Apellidos.toLowerCase().includes(filtroApellidos)) {
+                    mostrar = false;
+                }
+                if (filtroNombres && !valoracion.Nombre.toLowerCase().includes(filtroNombres)) {
+                    mostrar = false;
+                }
+                if (filtroPuntuacion && valoracion.Calificacion != filtroPuntuacion) {
+                    mostrar = false;
+                }
+                if (filtroFecha && valoracion.FechaOriginal !== filtroFecha) {
+                    mostrar = false;
+                }
+
+                fila.style.display = mostrar ? '' : 'none';
+            });
+        }
+
+        // Función para ver detalle de valoración
+        function verDetalle(id) {
+            const valoracion = valoraciones.find(v => v.Id === id);
+            if (valoracion) {
+                document.getElementById('detalleCliente').textContent = `${valoracion.Apellidos}, ${valoracion.Nombre}`;
+                document.getElementById('detalleCalificacion').innerHTML = `${valoracion.Calificacion} <i class="bi bi-star-fill text-warning"></i>`;
+                document.getElementById('detalleFecha').textContent = valoracion.Fecha;
+                document.getElementById('detalleComentario').textContent = valoracion.Comentario;
+                document.getElementById('detallePublico').innerHTML = valoracion.Publico 
+                    ? '<span class="badge bg-success">Sí</span>' 
+                    : '<span class="badge bg-secondary">No</span>';
+
+                const modal = new bootstrap.Modal(document.getElementById('modalDetalle'));
+                modal.show();
+            }
+        }
+
+        // Función para confirmar eliminación
+        function confirmarEliminacion(id) {
+            valoracionIdAEliminar = id;
+            const modal = new bootstrap.Modal(document.getElementById('modalEliminar'));
+            modal.show();
+        }
+
+        // Evento para eliminar valoración
+        document.getElementById('btnConfirmarEliminar').addEventListener('click', function() {
+            if (valoracionIdAEliminar) {
+                eliminarValoracion(valoracionIdAEliminar);
+            }
+        });
+
+        // Función para eliminar valoración
+        function eliminarValoracion(id) {
+            fetch(`/Abogado/EliminarValoracion`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `id=${id}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Cerrar modal
+                    bootstrap.Modal.getInstance(document.getElementById('modalEliminar')).hide();
+                    
+                    // Eliminar fila de la tabla
+                    const fila = document.querySelector(`tr[data-id="${id}"]`);
+                    if (fila) {
+                        fila.remove();
+                    }
+
+                    // Mostrar mensaje de éxito
+                    alert('Valoración eliminada correctamente');
+
+                    // Recargar página si no quedan valoraciones
+                    if (document.querySelectorAll('#tablaValoraciones tbody tr').length === 0) {
+                        location.reload();
+                    }
+                } else {
+                    alert('Error al eliminar la valoración: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al eliminar la valoración');
+            });
+        }
+
+        // Filtrar al escribir en tiempo real
+        document.getElementById('filtroApellidos').addEventListener('input', filtrarValoraciones);
+        document.getElementById('filtroNombres').addEventListener('input', filtrarValoraciones);
+    </script>
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+}
