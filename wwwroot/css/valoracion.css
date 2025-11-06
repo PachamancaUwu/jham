@@ -1,0 +1,77 @@
+/* Contenedor tipo tarjeta centrada */
+.valoracion-container {
+  max-width: 520px;
+  margin: 40px auto;
+  background: #ffffff;
+  padding: 28px 30px 26px;
+  border-radius: 6px;
+  box-shadow: 0 2px 14px rgba(0,0,0,0.08);
+}
+
+/* Título */
+.valoracion-container h1 {
+  text-align: center;
+  font-size: 36px;
+  font-weight: 800;
+  margin: 0 0 18px 0;
+}
+
+/* Etiquetas y disposición del formulario */
+.form-group > label { display: block; font-weight: 600; margin-bottom: 6px; }
+.form-group { margin-bottom: 14px; }
+
+/* Estrellas (patrón RTL para rellenar hacia la izquierda) */
+.rating-input { display: inline-block; direction: rtl; unicode-bidi: bidi-override; }
+.rating-input input { display: none; }
+.rating-input label { display: inline-block; cursor: pointer; font-size: 28px; color: #C9C9C9; margin-left: 8px; }
+.rating-input label:hover,
+.rating-input label:hover ~ label,
+.rating-input input:checked ~ label { color: #bfa004; }
+
+/* Textarea */
+.form-control {
+  width: 100%;
+  min-height: 110px;
+  border: 1px solid #C9C9C9;
+  border-radius: 3px;
+  background: #EFEFEF;
+  color: #333;
+  padding: 10px 12px;
+}
+
+/* Checkbox y su texto */
+.form-check { margin: 12px 0 16px; }
+.form-check-input { margin-right: 8px; }
+.form-check-label { color: #444; font-size: 14px; line-height: 1.2; }
+
+/* Botón principal */
+.btn-primary {
+  display: inline-block;
+  background: #0e2328; /* tono oscuro azulado */
+  color: #fff;
+  border: none;
+  padding: 8px 22px;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.btn-primary:hover { filter: brightness(1.05); }
+
+/* Botón secundario del mismo tamaño que el primario */
+.btn-secondary {
+  display: inline-block;
+  background: #7a8389; /* gris medio */
+  color: #fff;
+  border: none;
+  padding: 8px 22px;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.btn-secondary:hover { filter: brightness(1.05); }
+
+/* Validaciones */
+.text-danger { color: #c0392b; font-size: 13px; }
+
+/* Ajustes del resumen de validación si lo usas */
+.validation-summary-errors { margin-bottom: 10px; }
