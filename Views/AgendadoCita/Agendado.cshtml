@@ -83,7 +83,14 @@
 
             @foreach (var servicio in Model.Servicios)
             {
-                var estadoClase = servicio.Estado == "EnEspera" ? "estado-enespera" : "estado-pagado";
+                var estadoClase = servicio.Estado switch
+                {
+                    "En Espera" => "estado-enespera",
+                    "Pagado" => "estado-pagado",
+                    "Cancelado" => "estado-cancelado",
+                    "Pagado con Yape" => "estado-pagado-con-yape",
+                    _ => ""
+                };
                 var peruTz = TimeZoneInfo.FindSystemTimeZoneById("SA Pacific Standard Time");
                 var fechaPeru = TimeZoneInfo.ConvertTimeFromUtc(servicio.FechaInicio, peruTz);
                 <div class="servicio-card">
@@ -104,13 +111,27 @@
                     <p><strong>Fecha:</strong> @fechaPeru.ToString("dd/MM/yyyy HH:mm")</p>
                     <p class="servicio-estado @estadoClase">@servicio.Estado</p>
 
-                   @if (servicio.Estado == "EnEspera")
+                   @if (servicio.Estado == "En Espera")
                     {
                         <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
-                            <form asp-action="PagarCita" asp-controller="AgendadoCita" method="post" style="margin: 0;">
-                                <input type="hidden" name="servicioId" value="@servicio.Id" />
-                                <button type="submit" class="btn-primary" style="min-width:120px;">Pagar</button>
-                            </form>
+                            <div class="dropdown">
+                                <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownPago" data-bs-toggle="dropdown" aria-expanded="false" style="min-width:150px;">
+                                    Pagar
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownPago">
+                                    <li>
+                                        <form asp-action="PagarCitaPaypal" asp-controller="AgendadoCita" method="post" style="margin: 0;">
+                                            <input type="hidden" name="servicioId" value="@servicio.Id" />
+                                            <button type="submit" class="dropdown-item">Pagar con PayPal</button>
+                                        </form>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="AgendadoCita" asp-action="PagarCitaYape" asp-route-servicioId="@servicio.Id">
+                                            Pagar con Yape
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
                             <a asp-action="EditarCita" asp-controller="AgendadoCita" asp-route-servicioId="@servicio.Id" class="btn btn-warning" style="min-width:90px;">
                                 Reprogramar
                             </a>

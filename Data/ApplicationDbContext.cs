@@ -15,7 +15,6 @@ public class ApplicationDbContext : DbContext
     public DbSet<Retroalimentacion> Retroalimentaciones { get; set; } // AGREGAR ESTA LÍNEA
     public DbSet<Pago> Pagos { get; set; } // También agregar Pagos si no lo tienes
     public DbSet<Documento> Documentos { get; set; }
-    public DbSet<Retroalimentacion> Retroalimentaciones { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Relación uno a muchos (Cliente a Servicio)

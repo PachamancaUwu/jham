@@ -61,6 +61,7 @@
         return estado switch
         {
             "Pagado" => "bg-success text-white",
+            "Pagado con Yape" => "bg-success text-white",
             "EnEspera" => "bg-warning text-dark",
             "Cancelado" => "bg-danger text-white",
             _ => "bg-secondary text-white"
@@ -83,7 +84,7 @@
                 pageLength: 10
             });
 
-            const estados = ["Pagado", "EnEspera", "Cancelado"];
+            const estados = ["Pagado", "En Espera", "Cancelado", "Pagado con Yape"];
 
             // Evento para el botón Editar
             $(document).on("click", ".btn-editar", function () {
@@ -130,6 +131,7 @@
             function getEstadoClase(estado) {
                 switch (estado) {
                     case "Pagado": return "bg-success text-white";
+                    case "Pagado con Yape": return "bg-success text-white";
                     case "EnEspera": return "bg-warning text-dark";
                     case "Cancelado": return "bg-danger text-white";
                     default: return "bg-secondary text-white";

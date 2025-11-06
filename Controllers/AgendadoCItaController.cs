@@ -68,7 +68,7 @@ namespace jhampro.Controllers
 
             var servicio = new Servicio
             {
-                Estado = "EnEspera",
+                Estado = "En Espera",
                 FechaInicio = fechaInicio,
                 FechaFin = fechaFin,
                 TipoServicio = "Cita",
@@ -94,7 +94,7 @@ namespace jhampro.Controllers
         {
             var servicio = _context.Servicios
                 .Include(s => s.AbogadoServicios)
-                .FirstOrDefault(s => s.Id == servicioId && s.Estado == "EnEspera");
+                .FirstOrDefault(s => s.Id == servicioId && s.Estado == "En Espera");
             if (servicio == null)
                 return NotFound();
 
@@ -108,7 +108,7 @@ namespace jhampro.Controllers
         {
             var servicio = _context.Servicios
                 .Include(s => s.AbogadoServicios)
-                .FirstOrDefault(s => s.Id == Id && s.Estado == "EnEspera");
+                .FirstOrDefault(s => s.Id == Id && s.Estado == "En Espera");
             if (servicio == null)
                 return NotFound();
 
@@ -211,7 +211,7 @@ namespace jhampro.Controllers
         [HttpPost]
         public IActionResult CancelarCita(int servicioId)
         {
-            var servicio = _context.Servicios.FirstOrDefault(s => s.Id == servicioId && s.Estado == "EnEspera");
+            var servicio = _context.Servicios.FirstOrDefault(s => s.Id == servicioId && s.Estado == "En Espera");
             if (servicio == null)
             {
                 TempData["MensajeError"] = "No se pudo cancelar la cita.";
@@ -226,13 +226,13 @@ namespace jhampro.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> PagarCita(int servicioId)
+        public async Task<IActionResult> PagarCitaPaypal(int servicioId)
         {
             var servicio = _context.Servicios
                 .Include(s => s.Cliente)
                 .FirstOrDefault(s => s.Id == servicioId);
 
-            if (servicio == null || servicio.Estado != "EnEspera")
+            if (servicio == null || servicio.Estado != "En Espera")
             {
                 return NotFound();
             }
@@ -269,6 +269,14 @@ namespace jhampro.Controllers
             var approvalLink = result.Links.FirstOrDefault(link => link.Rel == "approve")?.Href;
 
             return Redirect(approvalLink);
+        }
+
+        [HttpGet]
+        public IActionResult PagarCitaYape(int servicioId)
+        {
+            // Puedes pasar datos si deseas mostrar info adicional del servicio
+            var servicio = _context.Servicios.FirstOrDefault(s => s.Id == servicioId);
+            return View(servicio);
         }
 
         [HttpGet]
@@ -413,7 +421,7 @@ namespace jhampro.Controllers
                 .ToDictionary(g => g.Key, g => g.Count());
 
             // Asegurar que siempre haya datos para cada estado
-            string[] estados = { "EnEspera", "Cancelado", "Pagado" };
+            string[] estados = { "En Espera", "Cancelado", "Pagado", "Pagado con Yape" };
             foreach (var estado in estados)
             {
                 if (!estadisticas.ContainsKey(estado))
