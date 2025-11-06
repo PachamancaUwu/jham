@@ -35,19 +35,19 @@
                      <a class="nav-link text-white fw-semibold" asp-area="" asp-controller="Home" asp-action="Privacy">Nosotros</a>
                 </li>
 
-                @if (HttpContextAccessor.HttpContext.Session.GetString("UsuarioNombre") != null)
+                @if (HttpContextAccessor.HttpContext?.Session.GetString("UsuarioNombre") != null)
                     {
         <!-- Usuario logueado -->
         <li class="nav-item">
-            <span class="nav-link text-white">Bienvenido/a, @HttpContextAccessor.HttpContext.Session.GetString("UsuarioNombre")</span>
+            <span class="nav-link text-white">Bienvenido/a, @HttpContextAccessor.HttpContext?.Session.GetString("UsuarioNombre")</span>
         </li>
-        @if (HttpContextAccessor.HttpContext.Session.GetString("TipoUsuario") == "Cliente")
+        @if (HttpContextAccessor.HttpContext?.Session.GetString("TipoUsuario") == "Cliente")
         {
         <li class="nav-item">
             <a class="nav-link text-white fw-semibold" asp-area="" asp-controller="AgendadoCita" asp-action="Agendado">Agendar Cita</a>
         </li>
         }
-        @if (HttpContextAccessor.HttpContext.Session.GetString("TipoUsuario") != "Cliente")
+        @if (HttpContextAccessor.HttpContext?.Session.GetString("TipoUsuario") != "Cliente")
         {
         <li class="nav-item">
             <a class="nav-link text-white fw-semibold" asp-area="" asp-controller="Historial" asp-action="Citas">Historial Cita</a>
@@ -58,13 +58,16 @@
         <li class="nav-item">
             <a class="nav-link text-white fw-semibold" asp-area="" asp-controller="Documento" asp-action="Ver">Documentos</a>
         </li>
+         <li class="nav-item">
+            <a class="nav-link text-white fw-semibold" asp-area="" asp-controller="Abogado" asp-action="Valoraciones">Valoraciones</a>
+        </li>
         <li class="nav-item">
             <a class="nav-link text-white fw-semibold" asp-area="" asp-controller="AgendadoCita" asp-action="Estadisticas">Estadísticas</a>
         </li>
         }
 
 
-        @if (HttpContextAccessor.HttpContext.Session.GetString("TipoUsuario") == "Administrador")
+        @if (HttpContextAccessor.HttpContext?.Session.GetString("TipoUsuario") == "Administrador")
         {
         <li class="nav-item">
             <a class="nav-link text-white fw-semibold" asp-controller="Admin" asp-action="Admin">Panel Admin</a>
@@ -75,7 +78,7 @@
             <a class="nav-link text-white fw-semibold" asp-controller="Login" asp-action="Logout">Cerrar sesión</a>
         </li>
             }
-            else if (HttpContextAccessor.HttpContext.Session.GetString("TipoUsuario") == "Abogado")
+            else if (HttpContextAccessor.HttpContext?.Session.GetString("TipoUsuario") == "Abogado")
 {
     <li class="nav-item">
         <a class="nav-link text-white fw-semibold" asp-controller="Abogado" asp-action="Abogado">Panel Abogado</a>
