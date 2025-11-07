@@ -73,6 +73,9 @@ catch (Exception ex)
 // Esto permite que tus controladores inyecten StorageClient y se autentiquen correctamente.
 builder.Services.AddSingleton(StorageClient.Create(credential));
 
+// Registrar servicio de envío de correo
+builder.Services.AddTransient<jhampro.Service.IEmailService, jhampro.Service.EmailService>();
+
 
 var app = builder.Build();
 
