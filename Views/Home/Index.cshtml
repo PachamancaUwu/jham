@@ -230,3 +230,61 @@
         </div>
     </div>
 </section>
+
+<!-- SECCIÓN: PREGUNTAS FRECUENTES -->
+<section id="faqSection" class="py-5 fade-in" style="background-color: #fff;">
+    <div class="container">
+        <h2 class="fw-bold text-start mb-1">Déjanos tus dudas</h2>
+        <p class="text-start text-muted mb-4">¡Te ayudamos!</p>
+
+        @{
+            // Lista estática de FAQs (puedes cargarla desde el controlador/modelo si prefieres)
+            var faqs = new[] {
+                new { Title = "¿Puedo hacer un juicio por alimentos?", Answer = "Sí. Para iniciar un proceso de alimentos debes acreditar parentesco y necesidad. Nosotros te orientamos sobre la documentación y el procedimiento.", Author = "Ana del Carpio"},
+                new { Title = "¿Quiero hacer el trámite para un divorcio, que necesito?", Answer = "Depende si es de mutuo acuerdo o contencioso. Generalmente se requiere acta de matrimonio, DNI y pruebas sobre bienes/niños. Podemos asesorarte y preparar la demanda.", Author = "Pamela Alvarez"},
+                new { Title = "Necesito ayuda para iniciar un caso penal", Answer = "Si temes una denuncia o requieres defensa, lo primero es recopilar pruebas y evitar declarar sin asesoría. Podemos ofrecer defensa penal inmediata.", Author = "Alexandra Menendez"},
+                new { Title = "¿Cómo puedo hacer un seguimiento de mi caso?", Answer = "Te damos acceso a un número de expediente y te guiamos sobre las fechas clave; además podemos enviar reportes periódicos por correo.", Author = "July de las Casas"},
+                new { Title = "Información de trámites y pendientes", Answer = "Te entregamos una lista de documentos y plazos para cada trámite, y verificamos los requisitos según el organismo.", Author = "Silvana Gomez"},
+                new { Title = "Asesorías civiles", Answer = "Ofrecemos consultas para contratos, arrendamientos y reclamos civiles. Te explicamos las opciones y costos.", Author = "Nadia Martinez"}
+            };
+        }
+
+        <div class="row g-4">
+            @for (int i = 0; i < faqs.Length; i++)
+            {
+                var item = faqs[i];
+                var collapseId = $"faqCollapse{i}";
+                var initials = !string.IsNullOrWhiteSpace(item.Author) ? item.Author.Trim().Substring(0,1).ToUpper() : "?";
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100 p-4 faq-card" style="cursor: pointer;">
+                        <div>
+                            <!-- Título (clickable para mostrar respuesta) -->
+                            <a class="text-decoration-none text-dark" data-bs-toggle="collapse" href="#@collapseId" role="button" aria-expanded="false" aria-controls="@collapseId">
+                                <h5 class="fw-bold mb-2" style="min-height:58px; line-height:1.15;">“@item.Title”</h5>
+                            </a>
+
+                            <!-- Autor / etiqueta 'Duda' -->
+                            <div class="d-flex align-items-center justify-content-start mt-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                    style="width:36px; height:36px; font-weight:700; background-color:#0d2b3b; color:white; font-size:0.9rem;">
+                                    @initials
+                                </div>
+                                <div class="ms-3">
+                                    <div class="fw-bold" style="font-size:0.95rem;">@item.Author</div>
+                                    <small class="text-muted">Duda</small>
+                                </div>
+                            </div>
+
+                            <!-- Respuesta oculta (se muestra al hacer clic en el título o en la tarjeta) -->
+                            <div class="collapse mt-3" id="@collapseId">
+                                <div class="card card-body p-3" style="background-color:#f8f9fa;">
+                                    <p class="mb-0" style="color:#444;">@item.Answer</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
