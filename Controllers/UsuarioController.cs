@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace jhampro.Controllers
 {
+    //Acceso público permitido
     public class UsuarioController : Controller
     {
         private readonly ApplicationDbContext _context;

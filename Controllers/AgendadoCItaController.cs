@@ -52,7 +52,8 @@ namespace jhampro.Controllers
             return View(model);
         }
 
-    [HttpPost]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult RegistrarCita(int AbogadoId, DateTime Fecha, string Hora)
         {
             var claimsIdentity = User.Identity as System.Security.Claims.ClaimsIdentity;

@@ -66,8 +66,9 @@ namespace jhampro.Controllers
         [HttpPost]
         [Route("caso/{id}/valoracion")]
         [ValidateAntiForgeryToken]
-        public IActionResult Valoracion(int id, jhampro.Models.ViewModels.ValoracionViewModel model)
+        public IActionResult Valoracion(int id, [Bind("Calificacion,Comentario,Publico")] jhampro.Models.ViewModels.ValoracionViewModel model)
         {
+            // Obtener el UsuarioId desde las claims, no confiar en datos enviados por el cliente
             var clienteIdClaim = User.FindFirst("UsuarioId");
             if (clienteIdClaim == null)
             {
@@ -76,10 +77,11 @@ namespace jhampro.Controllers
 
             int clienteId = int.Parse(clienteIdClaim.Value);
 
+            // Validar que el servicio exista y coincida con la ruta
             var servicio = _context.Servicios.FirstOrDefault(s => s.Id == id && s.TipoServicio == "Cita");
             if (servicio == null) return NotFound();
 
-            // Asegurar que el ServicioId coincide con la ruta
+            // Asignar manualmente el ServicioId, ignorando cualquier intento de over-posting
             model.ServicioId = servicio.Id;
 
             if (!ModelState.IsValid)
@@ -92,20 +94,19 @@ namespace jhampro.Controllers
                 return View(model);
             }
 
-            // Crear la entidad Retroalimentacion a partir del ViewModel
+            // Crear la entidad Retroalimentacion usando solo los campos permitidos
             var retro = new Retroalimentacion
             {
-                ServicioId = servicio.Id,
+                ServicioId = servicio.Id,          // nunca confiar en datos del cliente
                 Calificacion = model.Calificacion,
                 Comentario = model.Comentario,
                 Publico = model.Publico,
-                Fecha = DateTime.UtcNow,
-                Servicio = servicio  // Asignar la entidad Servicio
+                Fecha = DateTime.UtcNow,           // fecha asignada por el servidor
+                Servicio = servicio
             };
 
             try
             {
-                // Insertar siempre una nueva retroalimentación (relación uno-a-muchos)
                 _context.Set<Retroalimentacion>().Add(retro);
                 _context.SaveChanges();
 
@@ -116,11 +117,11 @@ namespace jhampro.Controllers
             }
             catch (Exception ex)
             {
-                // Log si es necesario
                 _logger.LogError(ex, "Error al guardar retroalimentacion");
                 ModelState.AddModelError("", "Ocurrió un error al guardar la valoración: " + ex.Message);
                 TempData["Debug"] = "Excepción: " + ex.Message;
-                // Devolver el ViewModel esperado por la vista
+
+                // Devolver solo los campos permitidos
                 var vm = new jhampro.Models.ViewModels.ValoracionViewModel
                 {
                     ServicioId = servicio.Id,
