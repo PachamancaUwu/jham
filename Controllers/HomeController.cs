@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace jhampro.Controllers;
 
+//Acceso público permitido
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;

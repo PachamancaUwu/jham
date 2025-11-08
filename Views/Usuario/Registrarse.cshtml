@@ -14,6 +14,7 @@
         @Html.ValidationSummary(true, "", new { @class = "text-danger" })
 
         <form asp-action="Registrarse" method="post" id="formRegistro">
+            @Html.AntiForgeryToken()
             <div class="form-group mb-3">
                 <label asp-for="Dni"></label>
                 <div class="input-group">

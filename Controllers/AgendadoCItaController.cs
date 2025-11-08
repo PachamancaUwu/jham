@@ -364,6 +364,7 @@ namespace jhampro.Controllers
         }
         
         [HttpGet]
+        [ValidateAntiForgeryToken]
         public IActionResult MisEstadisticas(DateTime? desde, DateTime? hasta)
         {
             desde = desde.HasValue ? DateTime.SpecifyKind(desde.Value, DateTimeKind.Utc) : null;

@@ -26,6 +26,7 @@ namespace jhampro.Controllers
 
         // ✅ POST de registro con validaciones
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Registrarse(Usuario usuario)
         {
             // Forzamos tipo de usuario (seguridad)

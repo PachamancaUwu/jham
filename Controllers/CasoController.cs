@@ -6,6 +6,7 @@ using jhampro.Models;
 
 namespace jhampro.Controllers
 {
+    [Authorize]
     public class CasoController : Controller
     {
         private readonly ApplicationDbContext _context;

@@ -25,6 +25,7 @@
         }
 
         <form asp-action="RegistrarCita" method="post">
+            @Html.AntiForgeryToken()
             <div class="form-section">
                 <h2>Especialidad</h2>
                 <select id="especialidadSelect" class="form-control" required>

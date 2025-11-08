@@ -33,18 +33,6 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 builder.Services.AddAuthorization();
 
-// --- AWS ---
-var awsOptions = new AWSOptions
-{
-    Credentials = new BasicAWSCredentials(
-        builder.Configuration["AWS:AccessKey"],
-        builder.Configuration["AWS:SecretKey"]
-    ),
-    Region = RegionEndpoint.GetBySystemName(builder.Configuration["AWS:Region"])
-};
-builder.Services.AddDefaultAWSOptions(awsOptions);
-builder.Services.AddAWSService<IAmazonS3>();
-
 var dotenvPath = Path.Combine(Directory.GetCurrentDirectory(), ".env.local");
 if (File.Exists(dotenvPath))
 {
