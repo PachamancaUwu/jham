@@ -46,6 +46,7 @@ namespace jhampro.Controllers
         // ✅ Método para actualizar estado de un servicio
         [HttpPost]
         [Authorize] // (redundante pero explícito)
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ActualizarEstado(int id, string nuevoEstado)
         {
             // ✅ Validar tipo de usuario antes de permitir cambios

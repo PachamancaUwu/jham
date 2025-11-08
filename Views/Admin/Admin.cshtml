@@ -4,6 +4,7 @@
     ViewData["Title"] = "Panel de Administración";
 }
 
+@Html.AntiForgeryToken()
 <div class="container mt-5">
     <div class="card shadow-lg border-0 rounded-4">
         <div class="card-header text-white d-flex justify-content-between align-items-center rounded-top-4">
@@ -113,6 +114,9 @@
                         url: '/Admin/ActualizarEstado',
                         type: 'POST',
                         data: { id: id, nuevoEstado: nuevoEstado },
+                        headers: {
+                            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                        },
                         success: function (response) {
                             if (response.success) {
                                 const badgeClass = getEstadoClase(nuevoEstado);
