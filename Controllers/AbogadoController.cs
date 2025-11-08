@@ -72,6 +72,7 @@ namespace jhampro.Controllers
 
         // ✅ Método para eliminar una valoración
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EliminarValoracion(int id)
         {
             var tipoUsuario = User.FindFirst("TipoUsuario")?.Value;

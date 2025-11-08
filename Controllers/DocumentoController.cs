@@ -166,6 +166,7 @@ namespace jhampro.Controllers
 
         [HttpPost]
         [Authorize]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Actualizar(Documento model, IFormFile Archivo)
         {
             var tipoUsuario = User.FindFirst("TipoUsuario")?.Value;

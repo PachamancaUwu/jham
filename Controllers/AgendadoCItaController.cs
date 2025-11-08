@@ -214,6 +214,7 @@ namespace jhampro.Controllers
     }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult CancelarCita(int servicioId)
         {
             var servicio = _context.Servicios.FirstOrDefault(s => s.Id == servicioId && s.Estado == "En Espera");

@@ -12,6 +12,7 @@
             <div class="card shadow-sm rounded-4">
                 <div class="card-body">
                     <form asp-action="Actualizar" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
                         <input type="hidden" asp-for="Id" />
                         <div class="mb-3">
                           <label asp-for="Observacion" class="form-label fw-bold">Observación (opcional)</label>
