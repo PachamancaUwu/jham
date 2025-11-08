@@ -232,6 +232,7 @@ namespace jhampro.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> PagarCitaPaypal(int servicioId)
         {
             var servicio = _context.Servicios

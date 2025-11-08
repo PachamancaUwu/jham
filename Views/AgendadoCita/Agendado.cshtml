@@ -122,6 +122,7 @@
                                 <ul class="dropdown-menu" aria-labelledby="dropdownPago">
                                     <li>
                                         <form asp-action="PagarCitaPaypal" asp-controller="AgendadoCita" method="post" style="margin: 0;">
+                                            @Html.AntiForgeryToken()
                                             <input type="hidden" name="servicioId" value="@servicio.Id" />
                                             <button type="submit" class="dropdown-item">Pagar con PayPal</button>
                                         </form>
