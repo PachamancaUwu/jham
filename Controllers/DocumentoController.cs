@@ -13,44 +13,51 @@ using Microsoft.Extensions.Configuration;
 
 namespace jhampro.Controllers
 {
-    [Authorize] // ✅ Requiere login por cookie (LoginController)
+    [Authorize] // Requiere login por cookie (LoginController)
     public class DocumentoController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _configuration;
         private readonly StorageClient _storageClient;
+        private readonly string _firebaseBucketName;
 
         public DocumentoController(ApplicationDbContext context, IConfiguration configuration, StorageClient storageClient)
         {
             _context = context;
             _configuration = configuration;
             _storageClient = storageClient;
+
+            _firebaseBucketName = _configuration["Firebase:StorageBucketName"] 
+            ?? Environment.GetEnvironmentVariable("FIREBASE_STORAGE_BUCKET");
+
+            if (string.IsNullOrEmpty(_firebaseBucketName))
+                throw new InvalidOperationException("No se ha configurado el bucket de Firebase Storage correctamente. Define FIREBASE_STORAGE_BUCKET en .env.local o variables de entorno.");
         }
 
         // Vista principal
         public IActionResult Perfil() => View();
 
-        // ✅ Ver documentos
-        [Authorize] // Solo usuarios autenticados pueden ver documentos
+        // Ver documentos
+        [Authorize]
         public async Task<IActionResult> Ver()
         {
             var documentos = await _context.Documentos.OrderByDescending(d => d.FechaSubida).ToListAsync();
             return View(documentos);
         }
 
-        // ✅ Vista para subir documentos (solo administradores)
+        // Vista para subir documentos (solo administradores)
         [HttpGet]
         [Authorize]
         public IActionResult Gestionar()
         {
             var tipoUsuario = User.FindFirst("TipoUsuario")?.Value;
             if (tipoUsuario != "Administrador" && tipoUsuario != "Abogado")
-                return Forbid(); // 403 si no es admin
+                return Forbid();
 
             return View();
         }
 
-        // ✅ Subida de documentos (solo administradores)
+        // Subida de documentos (solo administradores)
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
@@ -66,7 +73,6 @@ namespace jhampro.Controllers
                 return View(model);
             }
 
-            var firebaseBucketName = _configuration["Firebase:StorageBucketName"] ?? "jham-docs.firebasestorage.app";
             var uniqueFileName = $"{Guid.NewGuid()}_{Archivo.FileName}";
             var objectName = $"admin_documents/{uniqueFileName}";
 
@@ -77,7 +83,7 @@ namespace jhampro.Controllers
                     await Archivo.CopyToAsync(stream);
                     stream.Position = 0;
 
-                    await _storageClient.UploadObjectAsync(firebaseBucketName, objectName, Archivo.ContentType, stream);
+                    await _storageClient.UploadObjectAsync(_firebaseBucketName, objectName, Archivo.ContentType, stream);
                 }
 
                 model.NombreArchivo = Archivo.FileName;
@@ -99,7 +105,7 @@ namespace jhampro.Controllers
             }
         }
 
-        // ✅ Descarga de documentos
+        // Descarga de documentos
         [Authorize]
         public async Task<IActionResult> DescargarSeguro(int id)
         {
@@ -111,10 +117,8 @@ namespace jhampro.Controllers
             if (documento == null)
                 return NotFound();
 
-            var firebaseBucketName = _configuration["Firebase:StorageBucketName"] ?? "jham-docs.firebasestorage.app";
-
             using var memoryStream = new MemoryStream();
-            await _storageClient.DownloadObjectAsync(firebaseBucketName, documento.RutaArchivo, memoryStream);
+            await _storageClient.DownloadObjectAsync(_firebaseBucketName, documento.RutaArchivo, memoryStream);
             memoryStream.Position = 0;
 
             string fileName = SanitizeFileNameForHeader(documento.NombreArchivo);
@@ -124,7 +128,7 @@ namespace jhampro.Controllers
             return File(memoryStream.ToArray(), documento.ContentType ?? "application/octet-stream");
         }
 
-        // ✅ Eliminar documento
+        // Eliminar documento
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> Eliminar(int id)
@@ -137,8 +141,7 @@ namespace jhampro.Controllers
             if (documento == null)
                 return NotFound();
 
-            var firebaseBucketName = _configuration["Firebase:StorageBucketName"] ?? "jham-docs.firebasestorage.app";
-            await _storageClient.DeleteObjectAsync(firebaseBucketName, documento.RutaArchivo);
+            await _storageClient.DeleteObjectAsync(_firebaseBucketName, documento.RutaArchivo);
 
             _context.Documentos.Remove(documento);
             await _context.SaveChangesAsync();
@@ -147,7 +150,7 @@ namespace jhampro.Controllers
             return RedirectToAction("Ver");
         }
 
-        // ✅ Actualizar documento
+        // Actualizar documento
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> Actualizar(int id)
@@ -175,8 +178,6 @@ namespace jhampro.Controllers
             documento.Observacion = model.Observacion;
             documento.ServicioId = model.ServicioId;
 
-            var firebaseBucketName = _configuration["Firebase:StorageBucketName"] ?? "jham-docs.firebasestorage.app";
-
             if (Archivo != null && Archivo.Length > 0)
             {
                 var uniqueFileName = $"{Guid.NewGuid()}_{Archivo.FileName}";
@@ -186,12 +187,10 @@ namespace jhampro.Controllers
                 await Archivo.CopyToAsync(stream);
                 stream.Position = 0;
 
-                await _storageClient.UploadObjectAsync(firebaseBucketName, objectName, Archivo.ContentType, stream);
+                await _storageClient.UploadObjectAsync(_firebaseBucketName, objectName, Archivo.ContentType, stream);
 
                 if (!string.IsNullOrEmpty(documento.RutaArchivo))
-                {
-                    await _storageClient.DeleteObjectAsync(firebaseBucketName, documento.RutaArchivo);
-                }
+                    await _storageClient.DeleteObjectAsync(_firebaseBucketName, documento.RutaArchivo);
 
                 documento.NombreArchivo = Archivo.FileName;
                 documento.RutaArchivo = objectName;

@@ -372,9 +372,6 @@ namespace jhampro.Controllers
             var claimsIdentity = User.Identity as System.Security.Claims.ClaimsIdentity;
             int clienteId = int.Parse(claimsIdentity.FindFirst("UsuarioId").Value);
 
-            if (clienteId == null)
-                return RedirectToAction("Login", "Login");
-
             var query = _context.Servicios
                 .Where(s => s.ClienteId == clienteId && s.TipoServicio == "Cita");
 
@@ -403,10 +400,12 @@ namespace jhampro.Controllers
         public IActionResult Estadisticas(DateTime? desde, DateTime? hasta)
         {
             var claimsIdentity = User.Identity as System.Security.Claims.ClaimsIdentity;
-            int clienteId = int.Parse(claimsIdentity.FindFirst("UsuarioId").Value);
+            var claim = claimsIdentity?.FindFirst("UsuarioId");
 
-            if (clienteId == null)
+            if (claim == null || !int.TryParse(claim.Value, out int clienteId))
+            {
                 return RedirectToAction("Login", "Login");
+            }
 
             // Rango por defecto: últimos 30 días si no se envían fechas
             DateTime fechaInicio = desde ?? DateTime.UtcNow.AddDays(-30);

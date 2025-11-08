@@ -5,11 +5,12 @@ using Amazon.S3;
 using Amazon;
 using Amazon.Extensions.NETCore.Setup;
 using Amazon.Runtime;
-using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using System.IO;
 using Google.Cloud.Storage.V1;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using FirebaseAdmin;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,29 +45,42 @@ var awsOptions = new AWSOptions
 builder.Services.AddDefaultAWSOptions(awsOptions);
 builder.Services.AddAWSService<IAmazonS3>();
 
-// --- FIREBASE ---
-PdfSharpCore.Fonts.GlobalFontSettings.FontResolver = new CustomFontResolver();
-
-var serviceAccountPath = Path.Combine(builder.Environment.ContentRootPath, "Properties", "jham-docs-firebase-adminsdk-fbsvc-ce7a548c39.json");
-
-GoogleCredential credential;
-try
+var dotenvPath = Path.Combine(Directory.GetCurrentDirectory(), ".env.local");
+if (File.Exists(dotenvPath))
 {
-    credential = GoogleCredential.FromFile(serviceAccountPath);
-    FirebaseApp.Create(new AppOptions()
+    var lines = File.ReadAllLines(dotenvPath);
+    foreach (var line in lines)
     {
-        Credential = credential
-    });
-    Console.WriteLine("✅ Firebase Admin SDK inicializado correctamente.");
-}
-catch (Exception ex)
-{
-    Console.Error.WriteLine($"❌ Error al inicializar Firebase Admin SDK: {ex.Message}");
-    throw;
+        var parts = line.Split('=', 2);
+        if (parts.Length == 2)
+            Environment.SetEnvironmentVariable(parts[0], parts[1]);
+    }
 }
 
-// Registro de StorageClient
-builder.Services.AddSingleton(StorageClient.Create(GoogleCredential.FromFile(serviceAccountPath)));
+// --- FIREBASE: crear credenciales dinámicamente desde variables de entorno ---
+var firebaseConfig = new
+{
+    type = Environment.GetEnvironmentVariable("FIREBASE_TYPE"),
+    project_id = Environment.GetEnvironmentVariable("FIREBASE_PROJECT_ID"),
+    private_key_id = Environment.GetEnvironmentVariable("FIREBASE_PRIVATE_KEY_ID"),
+    private_key = Environment.GetEnvironmentVariable("FIREBASE_PRIVATE_KEY")?.Replace("\\n", "\n"), // ✅ reemplazar \\n por saltos reales
+    client_email = Environment.GetEnvironmentVariable("FIREBASE_CLIENT_EMAIL"),
+};
+
+var json = JsonSerializer.Serialize(firebaseConfig);
+
+// Crear credencial de Firebase
+var credential = GoogleCredential.FromJson(json);
+
+// Inicializar Firebase
+FirebaseApp.Create(new AppOptions
+{
+    Credential = credential
+});
+Console.WriteLine("✅ Firebase inicializado correctamente (variables de entorno)");
+
+// Registrar StorageClient en DI
+builder.Services.AddSingleton(StorageClient.Create(credential));
 
 var app = builder.Build();
 
