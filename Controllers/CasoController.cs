@@ -41,9 +41,13 @@ namespace jhampro.Controllers
         [HttpGet("caso/{id}/valoracion")]
         public IActionResult Valoracion(int id)
         {
-            if (HttpContext.Session.GetInt32("UsuarioId") is null)
-                    return RedirectToAction("Login", "Login");
+            var clienteIdClaim = User.FindFirst("UsuarioId");
+            if (clienteIdClaim == null)
+            {
+                return RedirectToAction("Login", "Login");
+            }
 
+            int clienteId = int.Parse(clienteIdClaim.Value);
             var servicio = _context.Servicios
                 .FirstOrDefault(s => s.Id == id && s.TipoServicio == "Cita");
             if (servicio == null) return NotFound();
@@ -63,8 +67,13 @@ namespace jhampro.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Valoracion(int id, jhampro.Models.ViewModels.ValoracionViewModel model)
         {
-            if (HttpContext.Session.GetInt32("UsuarioId") is null)
+            var clienteIdClaim = User.FindFirst("UsuarioId");
+            if (clienteIdClaim == null)
+            {
                 return RedirectToAction("Login", "Login");
+            }
+
+            int clienteId = int.Parse(clienteIdClaim.Value);
 
             var servicio = _context.Servicios.FirstOrDefault(s => s.Id == id && s.TipoServicio == "Cita");
             if (servicio == null) return NotFound();

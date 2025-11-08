@@ -8,26 +8,31 @@ using Amazon.Runtime;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using System.IO;
-using Google.Cloud.Storage.V1; // ¡Necesitamos este using para StorageClient!
+using Google.Cloud.Storage.V1;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configurar la conexión a la base de datos
+// --- CONFIGURACIÓN DE BASE DE DATOS ---
 var connectionString = builder.Configuration.GetConnectionString("PostgreSQLConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-// Add services to the container.
+// --- SERVICIOS PRINCIPALES ---
 builder.Services.AddControllersWithViews();
 builder.Services.AddSession();
 builder.Services.AddHttpContextAccessor();
 
-// 🧩 Agregar servicios necesarios
-builder.Services.AddControllersWithViews();
-builder.Services.AddSession();
-builder.Services.AddHttpContextAccessor();
+// --- AUTENTICACIÓN Y AUTORIZACIÓN ---
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Login/Login"; // ruta al login
+        options.AccessDeniedPath = "/Home/AccesoDenegado"; // opcional
+    });
+builder.Services.AddAuthorization();
 
-// ✅ Configurar credenciales AWS desde appsettings.json
+// --- AWS ---
 var awsOptions = new AWSOptions
 {
     Credentials = new BasicAWSCredentials(
@@ -36,47 +41,36 @@ var awsOptions = new AWSOptions
     ),
     Region = RegionEndpoint.GetBySystemName(builder.Configuration["AWS:Region"])
 };
-
 builder.Services.AddDefaultAWSOptions(awsOptions);
-builder.Services.AddAWSService<IAmazonS3>(); // Ahora sí funcionará correctamente
+builder.Services.AddAWSService<IAmazonS3>();
 
-// Registrar font resolver global
+// --- FIREBASE ---
 PdfSharpCore.Fonts.GlobalFontSettings.FontResolver = new CustomFontResolver();
 
-
-// --- INICIALIZACIÓN DE FIREBASE ADMIN SDK Y REGISTRO DE STORAGECLIENT ---
-// Ruta a tu archivo de clave de cuenta de servicio.
-// Asegúrate de que esta ruta sea correcta y el archivo esté protegido.
 var serviceAccountPath = Path.Combine(builder.Environment.ContentRootPath, "Properties", "jham-docs-firebase-adminsdk-fbsvc-ce7a548c39.json");
 
-GoogleCredential credential = null; // Declaramos la credencial aquí para usarla más adelante
-
+GoogleCredential credential;
 try
 {
-    credential = GoogleCredential.FromFile(serviceAccountPath); // Cargamos la credencial
+    credential = GoogleCredential.FromFile(serviceAccountPath);
     FirebaseApp.Create(new AppOptions()
     {
-        Credential = credential // Usamos la credencial cargada para FirebaseApp
+        Credential = credential
     });
-
-    Console.WriteLine("Firebase Admin SDK inicializado correctamente.");
+    Console.WriteLine("✅ Firebase Admin SDK inicializado correctamente.");
 }
 catch (Exception ex)
 {
-    Console.Error.WriteLine($"Error al inicializar Firebase Admin SDK: {ex.Message}");
-    // Es crucial que la aplicación no continúe si no puede autenticarse con Firebase.
-    // Lanza la excepción para que el inicio de la app falle si las credenciales no son válidas.
+    Console.Error.WriteLine($"❌ Error al inicializar Firebase Admin SDK: {ex.Message}");
     throw;
 }
 
-// ¡IMPORTANTE! Registramos StorageClient con la credencial cargada.
-// Esto permite que tus controladores inyecten StorageClient y se autentiquen correctamente.
-builder.Services.AddSingleton(StorageClient.Create(credential));
-
+// Registro de StorageClient
+builder.Services.AddSingleton(StorageClient.Create(GoogleCredential.FromFile(serviceAccountPath)));
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// --- PIPELINE ---
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -86,11 +80,9 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
-
-app.UseSession();
-app.UseRouting();
-
-app.UseAuthorization();
+app.UseSession();          // ✅ Sesión primero
+app.UseAuthentication();   // ✅ Luego autenticación
+app.UseAuthorization();    // ✅ Luego autorización
 
 app.MapControllerRoute(
     name: "default",

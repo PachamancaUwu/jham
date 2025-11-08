@@ -3,7 +3,9 @@ using Microsoft.Extensions.Logging;
 using jhampro.Models;
 using System.Linq;
 using System.ComponentModel.DataAnnotations;
-
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Security.Claims;
 
 namespace jhampro.Controllers
 {
@@ -24,38 +26,34 @@ namespace jhampro.Controllers
         }
 
         [HttpPost]
-        public IActionResult Login(string Email, string Password)
+        public async Task<IActionResult> Login(string Email, string Password)
         {
             var usuario = _context.Usuarios
                 .FirstOrDefault(u => u.Correo == Email && u.Contrasena == Password);
 
             if (usuario != null)
             {
-                HttpContext.Session.SetString("UsuarioNombre", usuario.Nombres);
-                HttpContext.Session.SetString("apellidosAbogado", usuario.Apellidos);
-                HttpContext.Session.SetString("Celular", usuario.Celular);
-                HttpContext.Session.SetString("Correo", usuario.Correo);
-                HttpContext.Session.SetString("TipoUsuario", usuario.TipoUsuario);
-                HttpContext.Session.SetInt32("UsuarioId", usuario.Id);
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Name, usuario.Nombres),
+                    new Claim("UsuarioId", usuario.Id.ToString()),
+                    new Claim("TipoUsuario", usuario.TipoUsuario)
+                };
 
-                if (usuario.TipoUsuario == "Administrador")
-                {
-                    return RedirectToAction("Admin", "Admin"); // Asegúrate de tener esta vista/controlador
-                }
-                else if (usuario.TipoUsuario == "Abogado")
-                {
-                    return RedirectToAction("Index", "Home");
-                }
-                else
-                {
-                    _logger.LogInformation("Ingresando CLIENTE ✅");
-                    return RedirectToAction("Index", "Home");
-                }
+                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(claimsIdentity),
+                    new AuthenticationProperties { IsPersistent = true });
+
+                return RedirectToAction("Index", "Home");
             }
 
             ViewBag.Error = "Correo o contraseña incorrectos.";
             return View();
         }
+
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
@@ -111,11 +109,11 @@ namespace jhampro.Controllers
 
         }
 
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
-            HttpContext.Session.Clear(); // Elimina todas las variables de sesión
-            return RedirectToAction("Index", "Home");
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            HttpContext.Session.Clear();
+            return RedirectToAction("Login", "Login");
         }
     }
-
 }

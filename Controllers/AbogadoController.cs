@@ -7,15 +7,17 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using jhampro.Models;
+using Microsoft.AspNetCore.Authorization; // 👈 Necesario para [Authorize]
 
 namespace jhampro.Controllers
 {
+    [Authorize] // 👈 Obliga a estar autenticado
     public class AbogadoController : Controller
     {
-        private readonly ILogger<AdminController> _logger;
+        private readonly ILogger<AbogadoController> _logger;
         private readonly ApplicationDbContext _context;
 
-        public AbogadoController(ILogger<AdminController> logger, ApplicationDbContext context)
+        public AbogadoController(ILogger<AbogadoController> logger, ApplicationDbContext context)
         {
             _logger = logger;
             _context = context;
@@ -23,27 +25,26 @@ namespace jhampro.Controllers
 
         public async Task<IActionResult> Abogado()
         {
-            // Validar si el usuario ha iniciado sesión y es Administrador
-            var tipoUsuario = HttpContext.Session.GetString("TipoUsuario");
+            // Obtener el tipo de usuario desde los claims
+            var tipoUsuario = User.FindFirst("TipoUsuario")?.Value;
 
+            // Si no es abogado, redirigir al login
             if (string.IsNullOrEmpty(tipoUsuario) || tipoUsuario != "Abogado")
             {
                 return RedirectToAction("Login", "Login");
             }
 
-            // Puedes enviar datos a la vista con ViewBag o un modelo
-            ViewBag.UsuarioNombre = HttpContext.Session.GetString("UsuarioNombre");
-            ViewBag.apellidosAbogado=HttpContext.Session.GetString("apellidosAbogado");
-            ViewBag.Celular=HttpContext.Session.GetString("Celular");
-            ViewBag.Correo=HttpContext.Session.GetString("Correo");
+            // Pasar los datos del usuario autenticado a la vista
+            ViewBag.UsuarioNombre = User.Identity?.Name ?? "Sin nombre";
+            ViewBag.TipoUsuario = tipoUsuario;
 
-            // Cargar valoraciones para la pestaña de valoraciones
+            // Cargar valoraciones
             var valoraciones = await _context.Retroalimentaciones
                 .Include(r => r.Servicio)
                     .ThenInclude(s => s.Cliente)
                 .OrderByDescending(r => r.Fecha)
                 .ToListAsync();
-            
+
             ViewBag.Valoraciones = valoraciones;
 
             return View();
@@ -52,17 +53,14 @@ namespace jhampro.Controllers
         // ✅ Método para mostrar todas las valoraciones
         public async Task<IActionResult> Valoraciones()
         {
-            // Validar sesión y rol
-            var tipoUsuario = HttpContext.Session.GetString("TipoUsuario");
+            var tipoUsuario = User.FindFirst("TipoUsuario")?.Value;
             if (string.IsNullOrEmpty(tipoUsuario) || tipoUsuario != "Abogado")
             {
                 return RedirectToAction("Login", "Login");
             }
 
-            // Enviar nombre del usuario logueado a la vista
-            ViewBag.UsuarioNombre = HttpContext.Session.GetString("UsuarioNombre");
+            ViewBag.UsuarioNombre = User.Identity?.Name ?? "Sin nombre";
 
-            // Obtener todas las valoraciones con datos del servicio y cliente
             var valoraciones = await _context.Retroalimentaciones
                 .Include(r => r.Servicio)
                     .ThenInclude(s => s.Cliente)
@@ -76,8 +74,7 @@ namespace jhampro.Controllers
         [HttpPost]
         public async Task<IActionResult> EliminarValoracion(int id)
         {
-            // Validar sesión y rol
-            var tipoUsuario = HttpContext.Session.GetString("TipoUsuario");
+            var tipoUsuario = User.FindFirst("TipoUsuario")?.Value;
             if (string.IsNullOrEmpty(tipoUsuario) || tipoUsuario != "Abogado")
             {
                 return Json(new { success = false, message = "No autorizado" });

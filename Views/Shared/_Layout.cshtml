@@ -1,4 +1,10 @@
-﻿<!DOCTYPE html>
+﻿@using System.Security.Claims
+@{
+    var tipoUsuario = User.FindFirst("TipoUsuario")?.Value;
+    var nombreUsuario = User.Identity?.Name;
+}
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -35,23 +41,20 @@
                      <a class="nav-link text-white fw-semibold" asp-area="" asp-controller="Home" asp-action="Privacy">Nosotros</a>
                 </li>
 
-                @if (HttpContextAccessor.HttpContext?.Session.GetString("UsuarioNombre") != null)
+                @if (nombreUsuario != null)
                     {
         <!-- Usuario logueado -->
         <li class="nav-item">
-            <span class="nav-link text-white">Bienvenido/a, @HttpContextAccessor.HttpContext?.Session.GetString("UsuarioNombre")</span>
+            <span class="nav-link text-white">Bienvenido/a, @nombreUsuario </span>
         </li>
-        @if (HttpContextAccessor.HttpContext?.Session.GetString("TipoUsuario") == "Cliente")
+        @if (tipoUsuario == "Cliente")
         {
         <li class="nav-item">
             <a class="nav-link text-white fw-semibold" asp-area="" asp-controller="AgendadoCita" asp-action="Agendado">Agendar Cita</a>
         </li>
         }
-        @if (HttpContextAccessor.HttpContext?.Session.GetString("TipoUsuario") != "Cliente")
+        @if (tipoUsuario != "Cliente")
         {
-        <li class="nav-item">
-            <a class="nav-link text-white fw-semibold" asp-area="" asp-controller="Historial" asp-action="Citas">Historial Cita</a>
-        </li>
         <li class="nav-item">
             <a class="nav-link text-white fw-semibold" asp-area="" asp-controller="Documento" asp-action="Gestionar">Subir Documentos</a>
         </li>
@@ -67,7 +70,7 @@
         }
 
 
-        @if (HttpContextAccessor.HttpContext?.Session.GetString("TipoUsuario") == "Administrador")
+        @if (tipoUsuario == "Administrador")
         {
         <li class="nav-item">
             <a class="nav-link text-white fw-semibold" asp-controller="Admin" asp-action="Admin">Panel Admin</a>
@@ -78,15 +81,15 @@
             <a class="nav-link text-white fw-semibold" asp-controller="Login" asp-action="Logout">Cerrar sesión</a>
         </li>
             }
-            else if (HttpContextAccessor.HttpContext?.Session.GetString("TipoUsuario") == "Abogado")
-{
-    <li class="nav-item">
-        <a class="nav-link text-white fw-semibold" asp-controller="Abogado" asp-action="Abogado">Panel Abogado</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link text-white fw-semibold" asp-controller="Login" asp-action="Logout">Cerrar sesión</a>
-    </li>
-}
+            else if (tipoUsuario == "Abogado")
+        {
+            <li class="nav-item">
+                <a class="nav-link text-white fw-semibold" asp-controller="Abogado" asp-action="Abogado">Panel Abogado</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white fw-semibold" asp-controller="Login" asp-action="Logout">Cerrar sesión</a>
+            </li>
+        }
         else
             {
         <!-- Usuario NO logueado -->

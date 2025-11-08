@@ -14,9 +14,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using PdfSharpCore.Pdf;
 using PdfSharpCore.Drawing;
+using Microsoft.AspNetCore.Authorization;
 
 namespace jhampro.Controllers
 {
+    [Authorize]
     public class AgendadoCitaController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -31,7 +33,9 @@ namespace jhampro.Controllers
         [HttpGet]
         public IActionResult Agendado()
         {
-            int? clienteId = HttpContext.Session.GetInt32("UsuarioId");
+            var claimsIdentity = User.Identity as System.Security.Claims.ClaimsIdentity;
+            int clienteId = int.Parse(claimsIdentity.FindFirst("UsuarioId").Value);
+
 
             var model = new AgendadoCitaViewModel
             {
@@ -51,9 +55,8 @@ namespace jhampro.Controllers
     [HttpPost]
         public IActionResult RegistrarCita(int AbogadoId, DateTime Fecha, string Hora)
         {
-            int? clienteId = HttpContext.Session.GetInt32("UsuarioId");
-            if (clienteId == null)
-                return RedirectToAction("Login", "Login");
+            var claimsIdentity = User.Identity as System.Security.Claims.ClaimsIdentity;
+            int clienteId = int.Parse(claimsIdentity.FindFirst("UsuarioId").Value);
 
             // Convertir hora peruana a UTC antes de guardar (PostgreSQL exige UTC)
             // Parsear la hora tipo "09:00"
@@ -72,7 +75,7 @@ namespace jhampro.Controllers
                 FechaInicio = fechaInicio,
                 FechaFin = fechaFin,
                 TipoServicio = "Cita",
-                ClienteId = clienteId.Value
+                ClienteId = clienteId
             };
 
             _context.Servicios.Add(servicio);
@@ -366,7 +369,9 @@ namespace jhampro.Controllers
             desde = desde.HasValue ? DateTime.SpecifyKind(desde.Value, DateTimeKind.Utc) : null;
             hasta = hasta.HasValue ? DateTime.SpecifyKind(hasta.Value, DateTimeKind.Utc).AddDays(1).AddSeconds(-1) : null;
 
-            int? clienteId = HttpContext.Session.GetInt32("UsuarioId");
+            var claimsIdentity = User.Identity as System.Security.Claims.ClaimsIdentity;
+            int clienteId = int.Parse(claimsIdentity.FindFirst("UsuarioId").Value);
+
             if (clienteId == null)
                 return RedirectToAction("Login", "Login");
 
@@ -397,7 +402,9 @@ namespace jhampro.Controllers
         [HttpGet]
         public IActionResult Estadisticas(DateTime? desde, DateTime? hasta)
         {
-            int? clienteId = HttpContext.Session.GetInt32("UsuarioId");
+            var claimsIdentity = User.Identity as System.Security.Claims.ClaimsIdentity;
+            int clienteId = int.Parse(claimsIdentity.FindFirst("UsuarioId").Value);
+
             if (clienteId == null)
                 return RedirectToAction("Login", "Login");
 

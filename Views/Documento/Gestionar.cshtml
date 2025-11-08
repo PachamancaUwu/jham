@@ -12,6 +12,7 @@
             <div class="card shadow-sm rounded-4">
                 <div class="card-body">
                     <form asp-action="Gestionar" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
                         <div class="mb-3">
                             <label asp-for="Observacion" class="form-label fw-bold">Observación (opcional)</label>
                             <textarea asp-for="Observacion" class="form-control" rows="3"></textarea>

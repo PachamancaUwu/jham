@@ -5,57 +5,62 @@
 }
 
 <link rel="stylesheet" href="~/css/registro.css" />
+
 <div class="fondo-registro">
     <div class="formulario-card">
         <h2>Formulario de Registro</h2>
+
+        @* Muestra errores de validación generales *@
         @Html.ValidationSummary(true, "", new { @class = "text-danger" })
-        <form asp-action="Registrarse" method="post">
 
-
-
+        <form asp-action="Registrarse" method="post" id="formRegistro">
             <div class="form-group mb-3">
                 <label asp-for="Dni"></label>
                 <div class="input-group">
-                    <input asp-for="Dni" class="form-control" id="dniInput" />
-                    <button type="button" class="btn btn-outline-secondary" id="btnVerificar">Verificar</button>
+                    <input asp-for="Dni" class="form-control" id="dniInput" maxlength="8" placeholder="Ingresa tu DNI" />
+                    <button type="button" class="btn btn-outline-secondary" id="btnVerificar">
+                        Verificar
+                    </button>
                 </div>
                 <span asp-validation-for="Dni" class="text-danger small"></span>
             </div>
 
-
-
             <div class="form-group mb-3">
                 <label asp-for="Nombres"></label>
-                <input asp-for="Nombres" class="form-control" id="nombresInput" />
+                <input asp-for="Nombres" class="form-control" id="nombresInput" placeholder="Tus nombres" />
                 <span asp-validation-for="Nombres" class="text-danger small"></span>
             </div>
 
             <div class="form-group mb-3">
                 <label asp-for="Apellidos"></label>
-                <input asp-for="Apellidos" class="form-control" id="apellidosInput" />
+                <input asp-for="Apellidos" class="form-control" id="apellidosInput" placeholder="Tus apellidos" />
                 <span asp-validation-for="Apellidos" class="text-danger small"></span>
             </div>
 
-
-
             <div class="form-group mb-3">
                 <label asp-for="Correo"></label>
-                <input asp-for="Correo" type="email" class="form-control" />
+                <input asp-for="Correo" type="email" class="form-control" placeholder="correo@ejemplo.com" />
                 <span asp-validation-for="Correo" class="text-danger small"></span>
             </div>
+
             <div class="form-group mb-3">
                 <label asp-for="Contrasena"></label>
-                <input asp-for="Contrasena" type="password" class="form-control" />
+                <input asp-for="Contrasena" type="password" class="form-control" placeholder="********" />
                 <span asp-validation-for="Contrasena" class="text-danger small"></span>
             </div>
+
             <div class="form-group mb-3">
                 <label asp-for="Celular"></label>
-                <input asp-for="Celular" class="form-control" maxlength="9" />
+                <input asp-for="Celular" class="form-control" maxlength="9" placeholder="Ej: 987654321" />
                 <span asp-validation-for="Celular" class="text-danger small"></span>
             </div>
+
             <input type="hidden" asp-for="TipoUsuario" />
-            <div class="d-grid">
-                <button type="submit" class="btn btn-custom">Registrarse</button>
+
+            <div class="d-grid mt-4">
+                <button type="submit" class="btn btn-custom" id="btnRegistrar">
+                    Registrarse
+                </button>
             </div>
         </form>
     </div>
@@ -63,29 +68,43 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script>
-        document.getElementById("btnVerificar").addEventListener("click", function () {
-            const dni = document.getElementById("dniInput").value;
 
-            if (dni.length !== 8) {
-                alert("El DNI debe tener 8 dígitos.");
+    <script>
+        const btnVerificar = document.getElementById("btnVerificar");
+        const dniInput = document.getElementById("dniInput");
+        const nombresInput = document.getElementById("nombresInput");
+        const apellidosInput = document.getElementById("apellidosInput");
+
+        btnVerificar.addEventListener("click", async function () {
+            const dni = dniInput.value.trim();
+
+            if (dni.length !== 8 || isNaN(dni)) {
+                alert("El DNI debe tener exactamente 8 dígitos numéricos.");
                 return;
             }
 
-            fetch(`/Usuario/VerificarDni?dni=${dni}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data && data.nombres) {
-                        document.getElementById("nombresInput").value = data.nombres;
-                        document.getElementById("apellidosInput").value = `${data.apellidoPaterno} ${data.apellidoMaterno}`;
-                    } else {
-                        alert("DNI no encontrado.");
-                    }
-                })
-                .catch(error => {
-                    console.error("Error:", error);
-                    alert("Error al consultar el DNI.");
-                });
+            btnVerificar.disabled = true;
+            btnVerificar.textContent = "Verificando...";
+
+            try {
+                const response = await fetch(`/Usuario/VerificarDni?dni=${dni}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    alert(data.error);
+                } else if (data.nombres) {
+                    nombresInput.value = data.nombres;
+                    apellidosInput.value = `${data.apellidoPaterno} ${data.apellidoMaterno}`;
+                } else {
+                    alert("No se encontró información para este DNI.");
+                }
+            } catch (error) {
+                console.error("Error al consultar el DNI:", error);
+                alert("Ocurrió un error al verificar el DNI. Intenta nuevamente.");
+            } finally {
+                btnVerificar.disabled = false;
+                btnVerificar.textContent = "Verificar";
+            }
         });
     </script>
 }
