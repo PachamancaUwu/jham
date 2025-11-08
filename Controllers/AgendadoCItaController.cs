@@ -108,6 +108,7 @@ namespace jhampro.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult EditarCita(int Id, int AbogadoId, DateTime Fecha, string Hora)
         {
             var servicio = _context.Servicios

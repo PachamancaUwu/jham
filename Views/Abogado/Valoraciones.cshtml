@@ -101,6 +101,11 @@
     </div>
 </div>
 
+<!-- Formulario oculto para generar el token anti-CSRF -->
+<form id="formAntiForgery" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>
+
 <!-- Modal de confirmación de eliminación -->
 <div class="modal fade" id="modalEliminar" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -191,7 +196,10 @@
             modal.show();
         }
 
-        // Evento para eliminar valoración
+        // Obtener el token de la vista
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+       // Evento para eliminar valoración
         document.getElementById('btnConfirmarEliminar').addEventListener('click', function() {
             if (valoracionIdAEliminar) {
                 eliminarValoracion(valoracionIdAEliminar);
@@ -204,25 +212,20 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token   // <-- token CSRF agregado
                 },
                 body: `id=${id}`
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Cerrar modal
                     bootstrap.Modal.getInstance(document.getElementById('modalEliminar')).hide();
-                    
-                    // Eliminar fila de la tabla
-                    const fila = document.querySelector(`tr[data-id="${id}"]`);
-                    if (fila) {
-                        fila.remove();
-                    }
 
-                    // Mostrar mensaje de éxito
+                    const fila = document.querySelector(`tr[data-id="${id}"]`);
+                    if (fila) fila.remove();
+
                     alert('Valoración eliminada correctamente');
 
-                    // Recargar página si no quedan valoraciones
                     if (document.querySelectorAll('#tablaValoraciones tbody tr').length === 0) {
                         location.reload();
                     }

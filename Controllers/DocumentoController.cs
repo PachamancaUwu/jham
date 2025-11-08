@@ -131,6 +131,7 @@ namespace jhampro.Controllers
         // Eliminar documento
         [HttpPost]
         [Authorize]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Eliminar(int id)
         {
             var tipoUsuario = User.FindFirst("TipoUsuario")?.Value;

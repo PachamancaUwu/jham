@@ -48,6 +48,7 @@
                             </a>
 
                             <form asp-action="Eliminar" method="post" asp-route-id="@doc.Id" style="display:inline-block;" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este documento?');">
+                                @Html.AntiForgeryToken()
                                 <button type="submit" class="btn btn-sm btn-danger" title="Eliminar">
                                     <i class="bi bi-trash"></i> Eliminar
                                 </button>
