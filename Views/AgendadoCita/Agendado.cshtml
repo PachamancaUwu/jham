@@ -66,6 +66,11 @@
                 </div>
             </div>
 
+            <div class="form-section">
+                <h2>Comentario</h2>
+                <input type="text" placeholder="Descríbenos brevemente el caso" name="Coment" class="form-control" required/>
+            </div>
+
             <div class="form-check" style="margin: 15px 0;">
                 <input type="checkbox" class="form-check-input" id="Terminos" name="Terminos" required />
                 <label class="form-check-label" for="Terminos">
@@ -110,6 +115,7 @@
                         }
                     </p>
                     <p><strong>Fecha:</strong> @fechaPeru.ToString("dd/MM/yyyy HH:mm")</p>
+                    <p><strong>Comentario:</strong> @servicio.Comentario</p>
                     <p class="servicio-estado @estadoClase">@servicio.Estado</p>
 
                    @if (servicio.Estado == "En Espera")

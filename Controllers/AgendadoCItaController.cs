@@ -15,6 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using PdfSharpCore.Pdf;
 using PdfSharpCore.Drawing;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace jhampro.Controllers
 {
@@ -54,7 +55,7 @@ namespace jhampro.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult RegistrarCita(int AbogadoId, DateTime Fecha, string Hora)
+        public IActionResult RegistrarCita(int AbogadoId, DateTime Fecha, string Hora, string Coment)
         {
             var claimsIdentity = User.Identity as System.Security.Claims.ClaimsIdentity;
             int clienteId = int.Parse(claimsIdentity.FindFirst("UsuarioId").Value);
@@ -76,7 +77,8 @@ namespace jhampro.Controllers
                 FechaInicio = fechaInicio,
                 FechaFin = fechaFin,
                 TipoServicio = "Cita",
-                ClienteId = clienteId
+                ClienteId = clienteId,
+                Comentario = Coment
             };
 
             _context.Servicios.Add(servicio);
