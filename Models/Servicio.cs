@@ -16,7 +16,8 @@ namespace jhampro.Models
         public string Estado { get; set; } = "EnEspera";
         public DateTime FechaInicio { get; set; }
         public DateTime? FechaFin { get; set; }
-        public string TipoServicio { get; set; } = "Cita";  // "Cita" y "Caso"
+        public string TipoServicio { get; set; } = "Cita";
+        public string? Comentario { get; set; }
 
         // Relación uno a muchos (Cliente a Servicio)
         public int ClienteId { get; set; }
