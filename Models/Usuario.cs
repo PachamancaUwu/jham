@@ -50,5 +50,10 @@ namespace jhampro.Models
         public ICollection<AbogadoServicio> AbogadoServicios { get; set; } = new List<AbogadoServicio>();
 
         public string Especialidad { get; set; } = "ClienteNormal";
+
+        // 🔥 NUEVAS COLUMNAS PARA RECUPERAR CONTRASEÑA
+        public string? ResetToken { get; set; }
+        public DateTime? ResetTokenExpira { get; set; }
+
     }
 }

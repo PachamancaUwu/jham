@@ -1,16 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using jhampro.Models;
 using jhampro.Service;
-using Amazon.S3;
-using Amazon;
-using Amazon.Extensions.NETCore.Setup;
-using Amazon.Runtime;
 using Google.Apis.Auth.OAuth2;
 using System.IO;
 using Google.Cloud.Storage.V1;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using FirebaseAdmin;
 using System.Text.Json;
+using DotNetEnv;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +15,9 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("PostgreSQLConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
+
+// Cargar el archivo .env.local
+Env.Load(".env.local");
 
 // --- SERVICIOS PRINCIPALES ---
 builder.Services.AddControllersWithViews();
@@ -69,6 +69,10 @@ Console.WriteLine("✅ Firebase inicializado correctamente (variables de entorno
 
 // Registrar StorageClient en DI
 builder.Services.AddSingleton(StorageClient.Create(credential));
+
+//API SendGrid
+builder.Services.AddTransient<EmailSendService>();
+Console.WriteLine("APIKEY: " + Environment.GetEnvironmentVariable("SENDGRID_API_KEY"));
 
 var app = builder.Build();
 

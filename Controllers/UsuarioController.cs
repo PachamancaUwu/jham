@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using jhampro.Models;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Identity;
 
 namespace jhampro.Controllers
 {
@@ -45,7 +46,7 @@ namespace jhampro.Controllers
 
             if (!ModelState.IsValid)
             {
-                // Diagnóstico: muestra errores en la consola
+                // Diagnóstico opcional
                 foreach (var key in ModelState.Keys)
                 {
                     var errors = ModelState[key].Errors;
@@ -57,10 +58,21 @@ namespace jhampro.Controllers
                 return View(usuario);
             }
 
+            // 🔐 1. Hashear la contraseña antes de guardar
+            var hasher = new PasswordHasher<Usuario>();
+            usuario.Contrasena = hasher.HashPassword(usuario, usuario.Contrasena);
+
+            // 🔐 2. ResetToken empieza en null (correcto)
+            usuario.ResetToken = null;
+            usuario.ResetTokenExpira = null;
+
+            // 🔐 3. Guardar usuario
             _context.Usuarios.Add(usuario);
             await _context.SaveChangesAsync();
+
             return RedirectToAction("RegistroExitoso");
         }
+
 
         // ✅ Vista de confirmación de registro
         public IActionResult RegistroExitoso()

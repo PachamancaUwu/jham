@@ -1,0 +1,31 @@
+@{
+    ViewData["Title"] = "Recuperar Contraseña";
+}
+<link rel="stylesheet" href="~/css/stylelogin.css" asp-append-version="true" />
+
+<div class="login-container">
+    <h2>RECUPERAR CONTRASEÑA</h2>
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <div class="alert alert-info">@TempData["Mensaje"]</div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <form asp-action="EnviarLinkRecuperacion" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="form-group">
+            <label for="correo">Correo electrónico:</label>
+            <input type="email" name="correo" required class="form-control" />
+        </div>
+
+        <button type="submit" class="btn-login">Enviar enlace</button>
+
+        <a href="/Login/Login" class="register-link">¿Volver al inicio de sesión?</a>
+    </form>
+</div>
