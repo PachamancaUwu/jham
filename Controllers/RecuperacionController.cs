@@ -7,6 +7,7 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 
 namespace jhampro.Controllers
 {
@@ -116,9 +117,8 @@ namespace jhampro.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u =>
-                u.Correo == model.Email &&
-                u.ResetToken == model.Token);
+            var usuario = await _context.Usuarios
+                .FirstOrDefaultAsync(u => u.Correo == model.Email && u.ResetToken == model.Token);
 
             if (usuario == null || usuario.ResetTokenExpira < DateTime.UtcNow)
             {
@@ -126,10 +126,9 @@ namespace jhampro.Controllers
                 return View(model);
             }
 
-            // ============================
-            // Cambiar contraseña con hash
-            // ============================
-            usuario.Contrasena = HashPassword(model.NewPassword);
+            // 🔐 Hashear contraseña usando PasswordHasher (MISMO ALGORITMO QUE REGISTRO)
+            var hasher = new PasswordHasher<Usuario>();
+            usuario.Contrasena = hasher.HashPassword(usuario, model.NewPassword);
 
             usuario.ResetToken = null;
             usuario.ResetTokenExpira = null;
@@ -140,14 +139,5 @@ namespace jhampro.Controllers
             return RedirectToAction("Login", "Login");
         }
 
-        // Hash simple con SHA256 (puedes usar BCrypt también)
-        private string HashPassword(string password)
-        {
-            using (var sha = SHA256.Create())
-            {
-                var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
-                return Convert.ToHexString(bytes);
-            }
-        }
     }
 }
